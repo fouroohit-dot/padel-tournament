@@ -1,22 +1,52 @@
+@font-face {
+  font-family: "Helvetica Neue LT Pro";
+  src: url("/fonts/HelveticaNeue-Light.woff2")
+    format("woff2");
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+}
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
+@font-face {
+  font-family: "Helvetica Neue LT Pro";
+  src: url("/fonts/HelveticaNeue-Medium.woff2")
+    format("woff2");
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
 
 /* ========================================
    GLOBAL VARIABLES
 ======================================== */
 
 :root {
-  --green: #102d24;
-  --green-dark: #081b16;
-  --green-mid: #204737;
-  --green-light: #315944;
+  /* AP primary colors */
+  --green: #446463;
+  --green-dark: #395958;
+  --green-mid: #557272;
+  --green-light: #809595;
+
+  /* AP secondary colors */
+  --green-40: #AAB9B9;
+  --green-20: #D5DCDC;
+
+  /* Contrast and accents */
   --gold: #d4b778;
-  --cream: #f4f0e5;
+  --cream: #e4e2db;
   --white: #ffffff;
-  --muted: #a8b7ab;
-  --border: rgba(212, 183, 120, .23);
+  --muted: #D5DCDC;
+  --border: rgba(212, 183, 120, 0.23);
+
+  /* Typography */
+  --font-body: "Helvetica Neue LT Pro",
+    "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+  --font-heading: "Helvetica Neue LT Pro",
+    "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
+/* Global reset */
 * {
   box-sizing: border-box;
 }
@@ -30,7 +60,35 @@ body {
 body {
   background: var(--green-dark);
   color: var(--cream);
-  font-family: 'DM Sans', Arial, sans-serif;
+
+  /* Helvetica Neue Light */
+  font-family: var(--font-body);
+  font-weight: 300;
+  letter-spacing: 0;
+}
+
+/* Titles and subtitles — Helvetica Neue Medium */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+}
+
+/* Body text */
+p,
+span,
+li,
+label,
+input,
+select,
+textarea,
+button {
+  font-family: var(--font-body);
 }
 
 button,
@@ -45,7 +103,7 @@ button {
 
 button:disabled {
   cursor: not-allowed;
-  opacity: .45;
+  opacity: 0.45;
 }
 
 a {
@@ -58,11 +116,6 @@ h2,
 h3,
 p {
   margin-top: 0;
-}
-
-h1,
-h2 {
-  font-family: 'Playfair Display', Georgia, serif;
 }
 
 .eyebrow {
@@ -78,41 +131,35 @@ h2 {
 }
 
 /* ========================================
-   AP LOGO & BRANDING
+   AP LOGO AND BRANDING
 ======================================== */
 
 .brand-emblem {
-  width: 55px;
-  height: 55px;
-  min-width: 55px;
-  flex: 0 0 55px;
-
   display: flex;
   align-items: center;
   justify-content: center;
 
+  width: 55px;
+  height: 55px;
+  flex: 0 0 55px;
+
   padding: 0;
   margin: 0;
-  border: none;
-  transform: none;
+  border: 0;
   overflow: hidden;
+  transform: none;
 }
 
 .brand-emblem .brand-logo {
   display: block;
   width: 100%;
   height: 100%;
-  max-width: 100%;
-  max-height: 100%;
   object-fit: contain;
 }
-
-/* Larger AP logo for coach/referee login */
 
 .brand-emblem.centered {
   width: 70px;
   height: 70px;
-  min-width: 70px;
   flex: 0 0 70px;
   margin: 0 auto 20px;
 }
@@ -121,12 +168,10 @@ h2 {
   margin: 0 auto 22px;
 }
 
-/* Spectator championship branding */
-
 .championship-brand {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   min-width: 0;
 }
 
@@ -136,12 +181,12 @@ h2 {
 
 .championship-title h1,
 .championship-brand h1 {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-size: clamp(22px, 2.5vw, 42px);
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: clamp(21px, 2.4vw, 38px);
   font-weight: 600;
+  line-height: 1.15;
   letter-spacing: 1px;
-  line-height: 1.2;
-  margin: 5px 0 0;
+  margin: 0;
 }
 
 /* ========================================
@@ -167,12 +212,16 @@ h2 {
 }
 
 /* ========================================
-   PUBLIC SPECTATOR SCOREBOARD
+   SPECTATOR PAGE
 ======================================== */
 
 .spectator-page {
   min-height: 100vh;
-  padding: 32px clamp(16px, 3vw, 64px) 20px;
+
+  padding:
+    16px
+    clamp(16px, 3vw, 64px)
+    22px;
 
   background: radial-gradient(
     ellipse at top,
@@ -181,20 +230,361 @@ h2 {
   );
 }
 
-/* Header */
-
-.spectator-header {
+.spectator-enhanced {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 20px;
+  flex-direction: column;
 }
 
-.header-info {
+
+/* ==========================================
+   COMPACT SPECTATOR BROADCAST HEADER
+========================================== */
+
+.spectator-main-header.broadcast-header {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    110px
+    125px
+    195px;
+
+  align-items: center;
+  column-gap: 20px;
+  width: 100%;
+}
+
+
+/* Tournament title */
+
+.broadcast-header .spectator-header-brand {
+  grid-column: 1;
+  min-width: 0;
+}
+
+.broadcast-header .championship-brand {
   display: flex;
   align-items: center;
-  gap: 35px;
+  gap: 12px;
+  min-width: 0;
 }
+
+.broadcast-header .brand-emblem {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+}
+
+.broadcast-header .championship-title {
+  min-width: 0;
+}
+
+.broadcast-header .championship-title h1 {
+  font-family: "Helvetica Neue LT Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: clamp(23px, 2.15vw, 39px);
+  font-weight: 500;
+  line-height: 1.12;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+/* Round */
+
+.broadcast-round {
+  width: 110px;
+  min-width: 110px;
+  text-align: center;
+}
+
+.broadcast-round .eyebrow {
+  font-size: 9px;
+  letter-spacing: 1.3px;
+  white-space: nowrap;
+}
+
+.broadcast-round strong {
+  color: var(--cream);
+  font-family: "DM Sans", sans-serif;
+  font-size: 29px;
+  line-height: 1;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Live connection */
+
+.broadcast-status {
+  width: 125px;
+  min-width: 125px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.broadcast-status .connection-pill {
+  padding: 9px 12px;
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+/* ==========================================
+   COMPACT SIDE-BY-SIDE CLOCK
+========================================== */
+
+.broadcast-clock {
+  width: 195px;
+  height: 82px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 6px 10px;
+
+  border: 1px solid rgba(212, 183, 120, 0.3);
+  background: rgba(212, 183, 120, 0.035);
+
+  overflow: hidden;
+}
+
+/* Main spectator clock */
+
+.broadcast-clock .match-clock {
+  display: grid;
+
+  grid-template-columns: 64px 91px;
+  grid-template-rows: 36px 18px;
+
+  column-gap: 12px;
+  row-gap: 2px;
+
+  align-items: center;
+  justify-content: start;
+
+  width: 167px;
+  min-width: 167px;
+}
+
+.broadcast-clock .match-clock-face {
+  display: block;
+
+  grid-column: 1;
+  grid-row: 1 / 3;
+
+  width: 64px;
+  height: 64px;
+}
+
+.broadcast-clock .match-clock-digits {
+  display: block;
+
+  grid-column: 2;
+  grid-row: 1;
+
+  width: 91px;
+
+  font-family: var(--font-body);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+
+  color: var(--cream);
+  text-align: center;
+  white-space: nowrap;
+
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: 0;
+}
+
+.broadcast-clock .match-clock-caption {
+  display: block;
+
+  grid-column: 2;
+  grid-row: 2;
+
+  width: 91px;
+
+  color: var(--gold);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.broadcast-clock .match-clock.is-expired
+.match-clock-digits {
+  color: #efabab;
+}
+
+/* ==========================================
+   TABLET
+========================================== */
+
+@media (min-width: 701px) and (max-width: 1100px) {
+  .spectator-main-header.broadcast-header {
+    grid-template-columns:
+      minmax(0, 1fr)
+      82px
+      105px
+      168px;
+    column-gap: 10px;
+  }
+
+  .broadcast-round {
+    width: 82px;
+    min-width: 82px;
+  }
+
+  .broadcast-status {
+    width: 105px;
+    min-width: 105px;
+  }
+
+  .broadcast-clock {
+    width: 168px;
+    min-width: 168px;
+    height: 70px;
+    padding: 5px;
+  }
+
+  .broadcast-clock .match-clock {
+    grid-template-columns: 50px 87px;
+    grid-template-rows: 30px 14px;
+    column-gap: 7px;
+    width: 144px;
+    min-width: 144px;
+  }
+
+  .broadcast-clock .match-clock-face {
+    width: 50px;
+    height: 50px;
+  }
+
+  .broadcast-clock .match-clock-digits {
+    width: 87px;
+    min-width: 87px;
+    font-size: 26px;
+  }
+
+  .broadcast-clock .match-clock-caption {
+    width: 87px;
+    min-width: 87px;
+    font-size: 7px;
+  }
+}
+
+/* ==========================================
+   MOBILE
+========================================== */
+
+@media (max-width: 700px) {
+  .spectator-main-header.broadcast-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 10px;
+    row-gap: 12px;
+  }
+
+  .broadcast-header .spectator-header-brand {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .broadcast-round {
+    grid-column: 1;
+    grid-row: 2;
+    width: auto;
+    min-width: 0;
+  }
+
+  .broadcast-status {
+    grid-column: 2;
+    grid-row: 2;
+    width: auto;
+    min-width: 0;
+  }
+
+  .broadcast-clock {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    justify-self: center;
+
+    width: 168px;
+    min-width: 168px;
+    height: 70px;
+  }
+
+  .broadcast-clock .match-clock {
+    grid-template-columns: 50px 87px;
+    grid-template-rows: 30px 14px;
+    column-gap: 7px;
+    width: 144px;
+    min-width: 144px;
+  }
+
+  .broadcast-clock .match-clock-face {
+    width: 50px;
+    height: 50px;
+  }
+
+  .broadcast-clock .match-clock-digits {
+    width: 87px;
+    min-width: 87px;
+    font-size: 26px;
+  }
+
+  .broadcast-clock .match-clock-caption {
+    width: 87px;
+    min-width: 87px;
+    font-size: 7px;
+  }
+}
+
+/* ==========================================
+   VERY SMALL MOBILES
+========================================== */
+
+@media (max-width: 420px) {
+
+  .spectator-main-header.broadcast-header {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .broadcast-round {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .broadcast-status {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+  }
+
+  .broadcast-clock {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    justify-self: center;
+    width: max-content;
+    max-width: 100%;
+  }
+
+  .broadcast-clock .match-clock {
+    grid-template-columns: 45px auto;
+  }
+
+  .broadcast-clock .match-clock-face {
+    width: 45px;
+    height: 45px;
+  }
+
+  .broadcast-clock .match-clock-digits {
+    font-size: 25px;
+  }
+}
+
+
 
 .round-indicator {
   text-align: center;
@@ -228,7 +618,7 @@ h2 {
 .connection-dot {
   width: 7px;
   height: 7px;
-  border-radius: 100%;
+  border-radius: 50%;
   background: #9fb1a5;
 }
 
@@ -247,41 +637,145 @@ h2 {
     transparent
   );
 
-  margin: 27px 0;
+  margin: 13px 0 15px;
 }
 
-/* Spectator introduction */
+/* ========================================
+   ANALOG CLOCK + DIGITAL COUNTDOWN
+======================================== */
 
-.spectator-intro {
+.match-clock {
+  --clock-size: clamp(104px, 9.5vw, 138px);
+
   display: flex;
-  align-items: end;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  flex: 0 0 auto;
+  gap: 2px;
+  min-width: var(--clock-size);
+}
+
+.match-clock-face {
+  display: block;
+
+  width: var(--clock-size);
+  height: var(--clock-size);
+
+  filter: drop-shadow(
+    0 1px 4px rgba(0, 0, 0, 0.22)
+  );
+}
+
+.match-clock-digits {
+  display: block;
+  color: var(--cream);
+
+  font-family: "DM Sans", Arial, sans-serif;
+  font-size: clamp(24px, 2.5vw, 37px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.12em;
+
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.match-clock.is-expired .match-clock-digits {
+  color: #bf0c0c;
+}
+
+.match-clock-caption {
+  color: var(--gold);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+}
+
+/* ========================================
+   MATCH CENTRE HEADER
+======================================== */
+
+.spectator-intro,
+.spectator-section-header {
+  display: flex;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 24px;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 15px;
 }
 
-.spectator-intro h2 {
-  font-size: clamp(25px, 2.6vw, 35px);
-  margin: 5px 0 0;
+.spectator-section-title {
+  min-width: 0;
 }
 
-.spectator-intro p {
+.spectator-intro h2,
+.spectator-section-title h2 {
+  font-size: clamp(24px, 2.4vw, 34px);
+  margin: 0 0 7px;
+}
+
+.spectator-intro p,
+.spectator-section-title p {
   color: var(--gold);
   font-size: 11px;
-  letter-spacing: 1.4px;
   font-weight: 700;
-  margin-bottom: 5px;
+  letter-spacing: 1.2px;
+  margin: 0;
 }
 
-/* Six-court grid */
+/* ========================================
+   PREMIER PADEL SPONSOR
+======================================== */
+
+.sponsor-branding {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.sponsor-label {
+  color: var(--gold);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  white-space: nowrap;
+}
+
+.sponsor-logo-container {
+  width: 230px;
+  height: 75px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.sponsor-logo-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+/* ========================================
+   SIX COURT GRID
+======================================== */
 
 .courts-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
+  gap: 14px;
+  align-items: stretch;
+  width: 100%;
 }
 
 .court-card {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
 
   background: linear-gradient(
@@ -291,15 +785,15 @@ h2 {
   );
 
   border: 1px solid var(--border);
-  box-shadow: 0 10px 35px rgba(0, 0, 0, .12);
+  box-shadow:
+    0 10px 35px rgba(0, 0, 0, 0.12);
+
   overflow: hidden;
 }
 
 .court-card.is-final {
-  border-color: rgba(212, 183, 120, .55);
+  border-color: rgba(212, 183, 120, 0.55);
 }
-
-/* Court card header */
 
 .court-card-top {
   display: flex;
@@ -307,16 +801,16 @@ h2 {
   align-items: center;
   gap: 8px;
 
-  padding: 18px 20px;
+  padding: 13px 16px;
   border-bottom: 1px solid var(--border);
 }
 
 .court-card-top h2 {
-  font-family: 'DM Sans', sans-serif;
-  margin: 6px 0 0;
-  font-size: clamp(16px, 1.7vw, 23px);
+  font-family: "DM Sans", sans-serif;
+  font-size: clamp(24px, 1.8vw, 30px);
   font-weight: 700;
   letter-spacing: 1px;
+  margin: 0;
 }
 
 .status {
@@ -336,25 +830,32 @@ h2 {
   color: var(--green-dark);
 }
 
-/* Scoreboard table */
+/* ========================================
+   SCOREBOARD
+======================================== */
 
 .score-table {
-  padding: 12px 15px 4px;
+  flex: 1;
+  padding: 10px 12px 12px;
 }
 
 .score-head,
 .score-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 53px 62px;
+  grid-template-columns:
+    minmax(0, 1fr)
+    76px
+    94px;
+
   align-items: center;
 }
 
 .score-head {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 1px;
   text-align: center;
-  padding: 7px 0 12px;
+  padding: 6px 0 9px;
 }
 
 .score-head span:first-child {
@@ -363,90 +864,69 @@ h2 {
 }
 
 .score-row {
-  border-top: 1px solid rgba(255, 255, 255, .09);
-  padding: 12px 0;
+  min-height: 125px;
+  padding: 18px 0;
+
+  border-top:
+    1px solid rgba(255, 255, 255, 0.09);
 }
 
 .team-players {
   min-width: 0;
   padding-left: 8px;
+  padding-right: 6px;
 }
 
 .team-label {
   display: block;
-  font-size: 9px;
+
   color: var(--gold);
+  font-size: 11px;
   letter-spacing: 1px;
   margin-bottom: 7px;
 }
 
 .team-players strong {
   display: block;
+
+  font-size: clamp(24px, 1.6vw, 30px);
+  font-weight: 700;
+  line-height: 1.25;
+
   overflow-wrap: anywhere;
-  font-size: clamp(12px, 1.05vw, 16px);
-  font-weight: 600;
-  line-height: 1.55;
 }
 
 .score-number,
 .point-number {
+  font-size: clamp(48px, 3.2vw, 64px);
+  font-weight: 700;
+  line-height: 1;
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
 
-.score-number {
-  font-size: clamp(23px, 2.1vw, 32px);
-  font-weight: 700;
-}
-
 .point-number {
   color: var(--gold);
-  font-size: clamp(23px, 2.1vw, 32px);
-  font-weight: 700;
 }
 
 .score-row.winner .team-players strong {
   color: var(--gold);
 }
 
-/* Court card footer */
-
-.court-card-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  padding: 12px 21px;
-  border-top: 1px solid var(--border);
-
-  color: var(--muted);
-  letter-spacing: 1px;
-  font-size: 9px;
-}
-
-.mini-court-icon {
+.spectator-winner {
   color: var(--gold);
-  font-size: 20px;
-}
-
-/* Spectator footer */
-
-.spectator-footer {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-
-  margin-top: 28px;
-  padding-top: 18px;
-
   border-top: 1px solid var(--border);
-  color: var(--muted);
-  letter-spacing: 2px;
-  font-size: 9px;
+
+  padding: 9px 16px;
+
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
 }
 
 /* ========================================
-   SHARED BUTTONS AND FORMS
+   SHARED BUTTONS
 ======================================== */
 
 .btn {
@@ -454,14 +934,15 @@ h2 {
   align-items: center;
   justify-content: center;
 
-  border: 1px solid transparent;
+  min-height: 43px;
   padding: 13px 20px;
+
+  border: 1px solid transparent;
 
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 1px;
   text-align: center;
-  min-height: 43px;
 }
 
 .btn-gold {
@@ -491,6 +972,10 @@ h2 {
   font-size: 12px;
 }
 
+/* ========================================
+   INPUTS
+======================================== */
+
 input,
 select {
   width: 100%;
@@ -512,6 +997,7 @@ select:focus {
 
 .field-label {
   display: block;
+
   color: var(--gold);
   font-size: 10px;
   letter-spacing: 1px;
@@ -555,7 +1041,7 @@ select:focus {
 }
 
 /* ========================================
-   AUTHENTICATION SCREENS
+   LOGIN SCREENS
 ======================================== */
 
 .auth-page {
@@ -575,6 +1061,7 @@ select:focus {
 
   background: var(--green);
   border: 1px solid var(--border);
+
   text-align: center;
 }
 
@@ -728,7 +1215,7 @@ select:focus {
   font-size: 20px;
 }
 
-/* Court assignments */
+/* Court assignment */
 
 .assignment-grid,
 .admin-courts-grid {
@@ -767,7 +1254,7 @@ select:focus {
   margin-bottom: 16px;
 }
 
-/* Live court control */
+/* Court control */
 
 .admin-court-title {
   display: flex;
@@ -822,11 +1309,11 @@ select:focus {
 .progress-track > div {
   height: 100%;
   background: var(--gold);
-  transition: width .3s ease;
+  transition: width 0.3s ease;
 }
 
 .danger-panel {
-  border-color: rgba(180, 90, 90, .35);
+  border-color: rgba(180, 90, 90, 0.35);
 }
 
 .danger-panel p {
@@ -917,7 +1404,7 @@ select:focus {
 
 .referee-team-names h2 {
   overflow-wrap: anywhere;
-  font-family: 'DM Sans', sans-serif;
+  font-family: "DM Sans", sans-serif;
   font-size: clamp(17px, 2.5vw, 27px);
   margin: 9px 0;
 }
@@ -937,7 +1424,7 @@ select:focus {
   color: var(--gold);
 }
 
-/* Referee point buttons */
+/* Referee controls */
 
 .award-button {
   display: block;
@@ -1006,60 +1493,122 @@ select:focus {
 }
 
 /* ========================================
-   TABLET RESPONSIVENESS
+   TABLET: 701–1100px
 ======================================== */
 
-@media (max-width: 1100px) {
-  .courts-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+@media (min-width: 701px) and (max-width: 1100px) {
+  .spectator-main-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
   }
 
+  .spectator-header-brand {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .spectator-main-header .match-clock {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .spectator-main-header .header-info {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-content: flex-end;
+  }
+
+  .match-clock {
+    --clock-size: 112px;
+  }
+
+  .sponsor-logo-container {
+    width: 150px;
+    height: 54px;
+  }
+
+  .courts-grid,
   .assignment-grid,
   .admin-courts-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .score-head,
+  .score-row {
+    grid-template-columns:
+      minmax(0, 1fr)
+      75px
+      85px;
   }
 
   .team-players strong {
-    font-size: 15px;
+    font-size: clamp(21px, 2.3vw, 27px);
+  }
+
+  .score-number,
+  .point-number {
+    font-size: clamp(43px, 4vw, 54px);
+  }
+
+  .score-row {
+    min-height: 115px;
+    padding: 16px 0;
   }
 }
 
 /* ========================================
-   MOBILE RESPONSIVENESS
+   MOBILE: <=700px
 ======================================== */
 
 @media (max-width: 700px) {
-
-  /* Spectator page */
-
   .spectator-page {
-    padding: 22px 13px;
+    padding: 12px 12px 20px;
   }
 
-  .spectator-header,
-  .admin-header {
-    flex-direction: column;
-    align-items: flex-start;
+  .spectator-main-header {
+    grid-template-columns:
+      minmax(0, 1fr)
+      auto;
+
+    gap: 12px 8px;
   }
 
-  /* AP logo on mobile */
-
-  .championship-brand {
-    gap: 10px;
+  .spectator-header-brand {
+    grid-column: 1 / -1;
+    grid-row: 1;
   }
+
+  .spectator-main-header .match-clock {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .spectator-main-header .header-info {
+    grid-column: 2;
+    grid-row: 2;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: auto;
+  }
+
+  /* AP logo */
 
   .brand-emblem {
     width: 42px;
     height: 42px;
-    min-width: 42px;
     flex-basis: 42px;
   }
 
   .brand-emblem.centered {
     width: 65px;
     height: 65px;
-    min-width: 65px;
     flex-basis: 65px;
+  }
+
+  .championship-brand {
+    gap: 10px;
   }
 
   .championship-title h1,
@@ -1069,40 +1618,105 @@ select:focus {
     overflow-wrap: break-word;
   }
 
-  .header-info {
-    width: 100%;
-    justify-content: space-between;
+  /* Clock */
+
+  .match-clock {
+    --clock-size: 94px;
   }
 
+  .match-clock-digits {
+    font-size: 26px;
+  }
+
+  .match-clock-caption {
+    font-size: 7px;
+  }
+
+  /* Header status */
+
+  .round-indicator strong {
+    font-size: 24px;
+  }
+
+  .connection-pill {
+    font-size: 9px;
+    padding: 7px;
+  }
+
+  /* Match centre and sponsor */
+
+  .spectator-section-header,
   .spectator-intro {
-    align-items: flex-start;
-    flex-direction: column;
+    gap: 10px;
+    align-items: center;
   }
 
-  /* Courts */
+  .spectator-section-title h2,
+  .spectator-intro h2 {
+    font-size: clamp(20px, 5vw, 27px);
+  }
+
+  .spectator-section-title p,
+  .spectator-intro p {
+    font-size: 9px;
+  }
+
+  .sponsor-label {
+    font-size: 7px;
+    letter-spacing: 1px;
+  }
+
+  .sponsor-logo-container {
+    width: 125px;
+    height: 45px;
+    padding: 5px;
+  }
+
+  /* Scoreboard */
 
   .courts-grid,
   .assignment-grid,
   .admin-courts-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .score-head,
   .score-row {
-    grid-template-columns: minmax(0, 1fr) 65px 70px;
+    grid-template-columns:
+      minmax(0, 1fr)
+      65px
+      76px;
   }
 
   .team-players strong {
-    font-size: 16px;
+    font-size: clamp(20px, 5vw, 25px);
   }
 
-  /* Coach dashboard */
+  .score-number,
+  .point-number {
+    font-size: clamp(40px, 10vw, 52px);
+  }
+
+  .score-row {
+    min-height: 110px;
+    padding: 16px 0;
+  }
+
+  /* Coach and referee screens */
+
+  .admin-header,
+  .referee-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 
   .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
   }
 
-  .registered-grid {
+  .registered-grid,
+  .player-form {
     grid-template-columns: 1fr;
   }
 
@@ -1114,19 +1728,8 @@ select:focus {
     padding: 19px;
   }
 
-  .player-form {
-    grid-template-columns: 1fr;
-  }
-
-  /* Referee screen */
-
   .referee-page {
     padding: 16px;
-  }
-
-  .referee-header {
-    align-items: flex-start;
-    flex-direction: column;
   }
 
   .referee-score-heading {
@@ -1149,38 +1752,1867 @@ select:focus {
     flex-direction: column;
   }
 
-  /* Authentication */
-
   .auth-card {
     padding: 28px 20px;
-  }
-
-  /* Footer */
-
-  .spectator-footer {
-    flex-wrap: wrap;
-    font-size: 8px;
   }
 }
 
 /* ========================================
-   LARGE DISPLAYS / TV SCREENS
+   VERY NARROW PHONES: <=380px
 ======================================== */
 
-@media (min-width: 1500px) {
-  .court-card-top {
-    padding: 24px;
+@media (max-width: 380px) {
+  .spectator-main-header {
+    grid-template-columns: 1fr;
   }
 
+  .spectator-main-header .match-clock,
+  .spectator-main-header .header-info {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .spectator-section-header,
+  .spectator-intro {
+    flex-wrap: wrap;
+  }
+
+  .sponsor-branding {
+    align-items: flex-start;
+  }
+
+  .score-head,
   .score-row {
-    padding: 18px 0;
+    grid-template-columns:
+      minmax(0, 1fr)
+      53px
+      62px;
   }
 
   .team-players strong {
+    font-size: 19px;
+  }
+
+  .score-number,
+  .point-number {
+    font-size: 38px;
+  }
+}
+
+
+/* ==========================================
+   PUBLIC INDIVIDUAL COURT VIEW
+   /view/court/1 through /view/court/6
+========================================== */
+
+.court-view-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      #183d2d 0%,
+      #09221a 60%,
+      #071b15 100%
+    );
+  color: var(--cream);
+}
+
+.court-view-container {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 16px clamp(16px, 3vw, 48px) 22px;
+}
+
+/* ==========================================
+   COMPACT TOURNAMENT HEADER
+========================================== */
+
+.court-view-page .court-view-header {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    92px
+    112px
+    185px;
+
+  align-items: center;
+  gap: clamp(10px, 1.8vw, 26px);
+
+  width: 100%;
+  min-height: 82px;
+  padding: 4px 0;
+}
+
+.court-view-page .spectator-header-brand {
+  grid-column: auto;
+  grid-row: auto;
+  min-width: 0;
+}
+
+.court-view-page .championship-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.court-view-page .brand-emblem {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+}
+
+.court-view-page .championship-title {
+  min-width: 0;
+}
+
+.court-view-page .championship-title h1 {
+  font-family: "Helvetica Neue LT Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: clamp(21px, 2.1vw, 34px);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  line-height: 1.12;
+  margin: 0 0 4px;
+}
+
+.court-view-title-sub {
+  display: block;
+  color: var(--gold);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.7px;
+}
+
+.court-view-page .broadcast-round {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+
+  grid-column: auto;
+  grid-row: auto;
+
+  width: 92px;
+  min-width: 0;
+}
+
+.court-view-page .broadcast-round .eyebrow {
+  font-size: 9px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.court-view-page .broadcast-round strong {
+  font-family: "DM Sans", sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.court-view-page .broadcast-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  grid-column: auto;
+  grid-row: auto;
+
+  width: 112px;
+  min-width: 0;
+}
+
+.court-view-page .connection-pill {
+  font-size: 9px;
+  letter-spacing: 0.3px;
+  padding: 8px 9px;
+}
+
+.court-view-page .broadcast-clock {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  grid-column: auto;
+  grid-row: auto;
+
+  width: 185px;
+  min-width: 0;
+  height: 74px;
+  padding: 5px 8px;
+
+  border: 1px solid rgba(212, 183, 120, 0.3);
+  background: rgba(212, 183, 120, 0.035);
+  overflow: hidden;
+}
+
+.court-view-clock {
+  display: grid;
+  grid-template-columns: 56px 92px;
+  align-items: center;
+  column-gap: 9px;
+  width: 157px;
+  min-width: 157px;
+}
+
+.court-view-clock-face {
+  display: block;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+}
+
+.court-view-clock-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+
+  width: 92px;
+  min-width: 0;
+}
+
+.court-view-clock-label,
+.court-view-clock-status {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+.court-view-clock-status {
+  color: var(--muted);
+  font-size: 7px;
+}
+
+.court-view-clock-digits {
+  display: block;
+  width: 100%;
+  color: var(--cream);
+  font-family: "DM Sans", monospace;
+  font-size: 27px;
+  line-height: 1;
+  font-weight: 700;
+  text-align: center;
+
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.court-view-clock.is-expired .court-view-clock-digits,
+.court-view-clock.is-expired .court-view-clock-status {
+  color: #efabab;
+}
+
+.court-view-header-divider {
+  height: 1px;
+  margin: 11px 0 19px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--gold),
+    transparent
+  );
+}
+
+/* ==========================================
+   FEATURED COURT HEADING
+========================================== */
+
+.court-view-featured-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+
+  margin-bottom: 14px;
+}
+
+.court-view-featured-heading-left {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  min-width: 0;
+}
+
+.court-view-featured-heading h2 {
+  font-family: "DM Sans", sans-serif;
+  font-size: clamp(27px, 3vw, 42px);
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  line-height: 1;
+  margin: 0;
+}
+
+.court-view-match-state {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 6px 9px;
+  background: #315b43;
+  color: #d9f1d5;
+
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.court-view-match-state.is-final {
+  background: var(--gold);
+  color: var(--green-dark);
+}
+
+.court-view-round-label {
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+/* ==========================================
+   FEATURED COURT — CREAM SCOREBOARD
+========================================== */
+
+.court-view-featured-board {
+  background: #f7f4ea;
+  color: #0b281d;
+  border: 1px solid #d9d3c2;
+  border-radius: 3px;
+
+  padding: clamp(16px, 2.5vw, 36px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+}
+
+.court-view-featured-columns,
+.court-view-featured-team {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    clamp(65px, 9vw, 120px)
+    clamp(75px, 10vw, 130px);
+
+  align-items: center;
+}
+
+.court-view-featured-columns {
+  padding-bottom: 16px;
+  border-bottom: 1px solid #d6d1c2;
+
+  color: #77796f;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-align: center;
+}
+
+.court-view-featured-columns span:first-child {
+  text-align: left;
+}
+
+.court-view-featured-team {
+  min-height: clamp(170px, 19vh, 240px);
+  gap: 0;
+  padding: 23px 0;
+}
+
+.court-view-featured-team + .court-view-featured-team {
+  border-top: 1px solid #d6d1c2;
+}
+
+.court-view-featured-players {
+  min-width: 0;
+  padding-right: 16px;
+}
+
+.court-view-team-label {
+  display: block;
+  color: #9c854c;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  margin-bottom: 16px;
+}
+
+.court-view-featured-players strong {
+  display: block;
+  font-family: "DM Sans", sans-serif;
+  font-size: clamp(30px, 3vw, 48px);
+  font-weight: 700;
+  line-height: 1.23;
+  color: #092b1e;
+  overflow-wrap: anywhere;
+}
+
+.court-view-featured-games,
+.court-view-featured-points {
+  font-family: "DM Sans", sans-serif;
+  font-size: clamp(57px, 6vw, 92px);
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  min-width: 0;
+}
+
+.court-view-featured-games {
+  color: #092b1e;
+}
+
+.court-view-featured-points {
+  color: #aa8a45;
+}
+
+.court-view-featured-team.is-winner
+.court-view-featured-players strong {
+  color: #9b7c36;
+}
+
+.court-view-winning-label {
+  display: inline-block;
+  margin-top: 12px;
+  color: #9b7c36;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+/* ==========================================
+   SPONSORSHIP
+========================================== */
+
+.court-view-sponsor {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  padding: 15px 8px 0;
+  margin-top: 12px;
+}
+
+.court-view-sponsor-label {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  white-space: nowrap;
+}
+
+.court-view-sponsor-image-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  width: 180px;
+  height: 55px;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 2px;
+}
+
+.court-view-sponsor-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* ==========================================
+   INVALID COURT FALLBACK
+========================================== */
+
+.court-view-error {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+}
+
+.court-view-error p {
+  color: var(--muted);
+}
+
+.court-view-error a {
+  color: var(--gold);
+  text-decoration: underline;
+}
+
+/* ==========================================
+   TABLET PORTRAIT / SMALL LAPTOP
+========================================== */
+
+@media (min-width: 701px) and (max-width: 1100px) {
+  .court-view-page .court-view-header {
+    grid-template-columns:
+      minmax(0, 1fr)
+      74px
+      100px
+      155px;
+
+    gap: 9px;
+  }
+
+  .court-view-page .championship-title h1 {
+    font-size: clamp(19px, 2.2vw, 27px);
+  }
+
+  .court-view-page .brand-emblem {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+
+  .court-view-page .broadcast-round {
+    width: 74px;
+  }
+
+  .court-view-page .broadcast-round .eyebrow {
+    font-size: 8px;
+  }
+
+  .court-view-page .broadcast-round strong {
+    font-size: 24px;
+  }
+
+  .court-view-page .broadcast-status {
+    width: 100px;
+  }
+
+  .court-view-page .connection-pill {
+    font-size: 8px;
+    padding: 7px 5px;
+  }
+
+  .court-view-page .broadcast-clock {
+    width: 155px;
+    height: 65px;
+    padding: 4px;
+  }
+
+  .court-view-clock {
+    grid-template-columns: 47px 86px;
+    column-gap: 6px;
+    width: 139px;
+    min-width: 139px;
+  }
+
+  .court-view-clock-face {
+    width: 47px;
+    height: 47px;
+  }
+
+  .court-view-clock-text {
+    width: 86px;
+  }
+
+  .court-view-clock-digits {
+    font-size: 24px;
+  }
+
+  .court-view-featured-players strong {
+    font-size: clamp(30px, 4vw, 43px);
+  }
+
+  .court-view-featured-games,
+  .court-view-featured-points {
+    font-size: clamp(55px, 7vw, 76px);
+  }
+}
+
+/* ==========================================
+   MOBILE / TABLET NARROW PORTRAIT
+========================================== */
+
+@media (max-width: 700px) {
+  .court-view-container {
+    padding: 12px 14px 20px;
+  }
+
+  .court-view-page .court-view-header {
+    display: grid;
+    grid-template-columns:
+      minmax(0, 1fr)
+      auto;
+
+    grid-template-rows: auto auto;
+    column-gap: 12px;
+    row-gap: 12px;
+    min-height: 0;
+    padding: 4px 0;
+  }
+
+  .court-view-page .spectator-header-brand {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .court-view-page .championship-title h1 {
+    font-size: clamp(18px, 4vw, 26px);
+  }
+
+  .court-view-page .brand-emblem {
+    width: 37px;
+    height: 37px;
+    flex-basis: 37px;
+  }
+
+  .court-view-title-sub {
+    font-size: 8px;
+  }
+
+  .court-view-page .broadcast-status {
+    grid-column: 2;
+    grid-row: 1;
+    width: auto;
+    justify-self: end;
+  }
+
+  .court-view-page .broadcast-round {
+    grid-column: 1;
+    grid-row: 2;
+    width: auto;
+    align-items: flex-start;
+  }
+
+  .court-view-page .broadcast-round strong {
+    font-size: 23px;
+  }
+
+  .court-view-page .broadcast-clock {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+    width: 155px;
+    height: 65px;
+  }
+
+  .court-view-header-divider {
+    margin: 10px 0 16px;
+  }
+
+  .court-view-featured-heading h2 {
+    font-size: clamp(26px, 5.5vw, 34px);
+  }
+
+  .court-view-featured-board {
+    padding: 16px;
+  }
+
+  .court-view-featured-columns,
+  .court-view-featured-team {
+    grid-template-columns:
+      minmax(0, 1fr)
+      clamp(50px, 11vw, 74px)
+      clamp(55px, 13vw, 82px);
+  }
+
+  .court-view-featured-columns {
+    font-size: 9px;
+    padding-bottom: 12px;
+  }
+
+  .court-view-featured-team {
+    min-height: 160px;
+    padding: 19px 0;
+  }
+
+  .court-view-team-label {
+    font-size: 10px;
+    margin-bottom: 10px;
+  }
+
+  .court-view-featured-players strong {
+    font-size: clamp(23px, 5.2vw, 35px);
+    line-height: 1.28;
+  }
+
+  .court-view-featured-games,
+  .court-view-featured-points {
+    font-size: clamp(43px, 10vw, 65px);
+  }
+
+  .court-view-others {
+    margin-top: 22px;
+  }
+
+  .court-view-other-row {
+    grid-template-columns: 35px minmax(0, 1fr) 105px;
+    gap: 6px;
+    padding: 13px 4px;
+  }
+
+  .court-view-other-number {
+    font-size: 20px;
+  }
+
+  .court-view-other-team {
+    font-size: 13px;
+  }
+
+  .court-view-others-columns,
+  .court-view-other-score-line {
+    grid-template-columns: 46px 53px;
+    column-gap: 6px;
+  }
+
+  .court-view-others-columns {
+    font-size: 8px;
+  }
+
+  .court-view-other-score-line strong {
     font-size: 17px;
   }
 
-  .spectator-page {
-    padding-top: 40px;
+  .court-view-sponsor-image-wrap {
+    width: 150px;
+    height: 46px;
   }
 }
+
+/* ==========================================
+   VERY NARROW PHONES
+========================================== */
+
+@media (max-width: 380px) {
+  .court-view-page .court-view-header {
+    column-gap: 6px;
+  }
+
+  .court-view-page .championship-title h1 {
+    font-size: 17px;
+  }
+
+  .court-view-page .brand-emblem {
+    width: 32px;
+    height: 32px;
+    flex-basis: 32px;
+  }
+
+  .court-view-page .connection-pill {
+    font-size: 7px;
+    padding: 6px;
+  }
+
+  .court-view-page .broadcast-clock {
+    width: 143px;
+  }
+
+  .court-view-clock {
+    grid-template-columns: 43px 82px;
+    width: 131px;
+    min-width: 131px;
+  }
+
+  .court-view-clock-face {
+    width: 43px;
+    height: 43px;
+  }
+
+  .court-view-clock-text {
+    width: 82px;
+  }
+
+  .court-view-clock-digits {
+    font-size: 23px;
+  }
+
+  .court-view-featured-board {
+    padding: 12px;
+  }
+
+  .court-view-featured-players strong {
+    font-size: 21px;
+  }
+
+  .court-view-featured-games,
+  .court-view-featured-points {
+    font-size: 40px;
+  }
+
+  .court-view-other-row {
+    grid-template-columns: 28px minmax(0, 1fr) 88px;
+    gap: 5px;
+  }
+
+  .court-view-other-team {
+    font-size: 12px;
+  }
+
+  .court-view-others-columns,
+  .court-view-other-score-line {
+    grid-template-columns: 38px 44px;
+    column-gap: 4px;
+  }
+
+  .court-view-other-score-line strong {
+    font-size: 16px;
+  }
+}
+
+
+
+
+/* ==========================================
+   PUBLIC INDIVIDUAL COURT VIEW
+   /view/court/1 through /view/court/6
+========================================== */
+
+.court-view-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      #183d2d 0%,
+      #09221a 60%,
+      #071b15 100%
+    );
+  color: var(--cream);
+}
+
+.court-view-container {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 16px clamp(16px, 3vw, 48px) 22px;
+}
+
+/* ==========================================
+   COMPACT TOURNAMENT HEADER
+========================================== */
+
+.court-view-page .court-view-header {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    92px
+    112px
+    185px;
+
+  align-items: center;
+  gap: clamp(10px, 1.8vw, 26px);
+
+  width: 100%;
+  min-height: 82px;
+  padding: 4px 0;
+}
+
+.court-view-page .spectator-header-brand {
+  grid-column: auto;
+  grid-row: auto;
+  min-width: 0;
+}
+
+.court-view-page .championship-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.court-view-page .brand-emblem {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+}
+
+.court-view-page .championship-title {
+  min-width: 0;
+}
+
+.court-view-page .championship-title h1 {
+  font-family: "Helvetica Neue LT Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: clamp(21px, 2.1vw, 34px);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  line-height: 1.12;
+  margin: 0 0 4px;
+}
+
+.court-view-title-sub {
+  display: block;
+  color: var(--gold);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.7px;
+}
+
+.court-view-page .broadcast-round {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+
+  grid-column: auto;
+  grid-row: auto;
+
+  width: 92px;
+  min-width: 0;
+}
+
+.court-view-page .broadcast-round .eyebrow {
+  font-size: 9px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.court-view-page .broadcast-round strong {
+  font-family: "DM Sans", sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.court-view-page .broadcast-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  grid-column: auto;
+  grid-row: auto;
+
+  width: 112px;
+  min-width: 0;
+}
+
+.court-view-page .connection-pill {
+  font-size: 9px;
+  letter-spacing: 0.3px;
+  padding: 8px 9px;
+}
+
+.court-view-page .broadcast-clock {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  grid-column: auto;
+  grid-row: auto;
+
+  width: 185px;
+  min-width: 0;
+  height: 74px;
+  padding: 5px 8px;
+
+  border: 1px solid rgba(212, 183, 120, 0.3);
+  background: rgba(212, 183, 120, 0.035);
+  overflow: hidden;
+}
+
+.court-view-clock {
+  display: grid;
+  grid-template-columns: 56px 92px;
+  align-items: center;
+  column-gap: 9px;
+  width: 157px;
+  min-width: 157px;
+}
+
+.court-view-clock-face {
+  display: block;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+}
+
+.court-view-clock-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+
+  width: 92px;
+  min-width: 0;
+}
+
+.court-view-clock-label,
+.court-view-clock-status {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+.court-view-clock-status {
+  color: var(--muted);
+  font-size: 7px;
+}
+
+.court-view-clock-digits {
+  display: block;
+  width: 100%;
+  color: var(--cream);
+  font-family: "DM Sans", monospace;
+  font-size: 27px;
+  line-height: 1;
+  font-weight: 700;
+  text-align: center;
+
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.court-view-clock.is-expired .court-view-clock-digits,
+.court-view-clock.is-expired .court-view-clock-status {
+  color: #efabab;
+}
+
+.court-view-header-divider {
+  height: 1px;
+  margin: 11px 0 19px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--gold),
+    transparent
+  );
+}
+
+/* ==========================================
+   FEATURED COURT HEADING
+========================================== */
+
+.court-view-featured-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+
+  margin-bottom: 14px;
+}
+
+.court-view-featured-heading-left {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  min-width: 0;
+}
+
+.court-view-featured-heading h2 {
+  font-family: "DM Sans", sans-serif;
+  font-size: clamp(27px, 3vw, 42px);
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  line-height: 1;
+  margin: 0;
+}
+
+.court-view-match-state {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 6px 9px;
+  background: #315b43;
+  color: #d9f1d5;
+
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.court-view-match-state.is-final {
+  background: var(--gold);
+  color: var(--green-dark);
+}
+
+.court-view-round-label {
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+/* ==========================================
+   FEATURED COURT — CREAM SCOREBOARD
+========================================== */
+
+.court-view-featured-board {
+  background: #f7f4ea;
+  color: #0b281d;
+  border: 1px solid #d9d3c2;
+  border-radius: 3px;
+
+  padding: clamp(16px, 2.5vw, 36px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+}
+
+.court-view-featured-columns,
+.court-view-featured-team {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    clamp(65px, 9vw, 120px)
+    clamp(75px, 10vw, 130px);
+
+  align-items: center;
+}
+
+.court-view-featured-columns {
+  padding-bottom: 16px;
+  border-bottom: 1px solid #d6d1c2;
+
+  color: #77796f;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-align: center;
+}
+
+.court-view-featured-columns span:first-child {
+  text-align: left;
+}
+
+.court-view-featured-team {
+  min-height: clamp(170px, 19vh, 240px);
+  gap: 0;
+  padding: 23px 0;
+}
+
+.court-view-featured-team + .court-view-featured-team {
+  border-top: 1px solid #d6d1c2;
+}
+
+.court-view-featured-players {
+  min-width: 0;
+  padding-right: 16px;
+}
+
+.court-view-team-label {
+  display: block;
+  color: #9c854c;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  margin-bottom: 16px;
+}
+
+.court-view-featured-players strong {
+  display: block;
+  font-family: "DM Sans", sans-serif;
+  font-size: clamp(30px, 3vw, 48px);
+  font-weight: 700;
+  line-height: 1.23;
+  color: #092b1e;
+  overflow-wrap: anywhere;
+}
+
+.court-view-featured-games,
+.court-view-featured-points {
+  font-family: "DM Sans", sans-serif;
+  font-size: clamp(57px, 6vw, 92px);
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  min-width: 0;
+}
+
+.court-view-featured-games {
+  color: #092b1e;
+}
+
+.court-view-featured-points {
+  color: #aa8a45;
+}
+
+.court-view-featured-team.is-winner
+.court-view-featured-players strong {
+  color: #9b7c36;
+}
+
+.court-view-winning-label {
+  display: inline-block;
+  margin-top: 12px;
+  color: #9b7c36;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+
+.court-view-other-game {
+  color: var(--cream);
+}
+
+.court-view-other-point {
+  color: var(--gold);
+}
+
+/* ==========================================
+   SPONSORSHIP
+========================================== */
+
+.court-view-sponsor {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  padding: 15px 8px 0;
+  margin-top: 12px;
+}
+
+.court-view-sponsor-label {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  white-space: nowrap;
+}
+
+.court-view-sponsor-image-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  width: 180px;
+  height: 55px;
+  background: #000000;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 2px;
+}
+
+.court-view-sponsor-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+
+/* ==========================================
+   SINGLE-COURT TABLET VIEW
+========================================== */
+
+.court-view-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.court-view-featured {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.court-view-featured-board {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.court-view-featured-team {
+  flex: 1;
+  min-height: 190px;
+}
+
+.court-view-sponsor {
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+.court-view-sponsor-image-wrap {
+  background: transparent;
+  border: none;
+}
+
+/* Tablet landscape */
+
+@media (min-width: 701px) {
+  .court-view-featured-players strong {
+    font-size: clamp(36px, 3.5vw, 54px);
+  }
+
+  .court-view-featured-games,
+  .court-view-featured-points {
+    font-size: clamp(65px, 6vw, 100px);
+  }
+}
+
+/* Tablet portrait and mobile */
+
+@media (max-width: 700px) {
+  .court-view-featured-team {
+    min-height: 175px;
+  }
+
+  .court-view-featured-players strong {
+    font-size: clamp(25px, 5.5vw, 40px);
+  }
+
+  .court-view-featured-games,
+  .court-view-featured-points {
+    font-size: clamp(48px, 10vw, 72px);
+  }
+
+  .court-view-sponsor {
+    justify-content: center;
+    margin-top: auto;
+  }
+}
+
+
+/* ==========================================
+   PLAYER STATISTICS — PUBLIC LEADERBOARD
+   Route: /view/players
+========================================== */
+
+.player-stats-page {
+  min-height: 100vh;
+}
+
+.player-stats-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 1800px;
+}
+
+/* ==========================================
+   LEADERBOARD HEADING
+========================================== */
+
+.player-stats-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+
+  padding: 8px 0 22px;
+}
+
+.player-stats-eyebrow {
+  display: block;
+
+  color: var(--gold);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+
+  margin-bottom: 9px;
+}
+
+.player-stats-heading h2 {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: clamp(36px, 3.4vw, 58px);
+  font-weight: 700;
+  line-height: 1.1;
+
+  margin: 0 0 8px;
+}
+
+.player-stats-heading p {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  margin: 0;
+}
+
+.player-stats-count {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.player-stats-count strong {
+  color: var(--gold);
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.player-stats-count span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+/* ==========================================
+   TWO-COLUMN LEADERBOARD
+========================================== */
+
+.player-stats-leaderboard {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: clamp(15px, 2vw, 35px);
+  width: 100%;
+}
+
+.player-stats-column {
+  min-width: 0;
+  overflow: hidden;
+
+  border: 1px solid rgba(212, 183, 120, 0.24);
+  background: rgba(8, 31, 23, 0.5);
+}
+
+/* Column headings */
+
+.player-stats-column-heading,
+.player-stats-row {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    92px
+    63px
+    63px;
+
+  align-items: center;
+  column-gap: 9px;
+}
+
+.player-stats-column-heading {
+  min-height: 45px;
+  padding: 10px 15px;
+
+  background: #1a3e2f;
+  border-bottom: 1px solid var(--border);
+
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.1px;
+  text-align: center;
+}
+
+.player-stats-column-heading span:first-child {
+  text-align: left;
+}
+
+/* Player rows */
+
+.player-stats-row {
+  min-height: 62px;
+  padding: 8px 15px;
+
+  border-bottom: 1px solid rgba(212, 183, 120, 0.14);
+}
+
+.player-stats-row:nth-child(odd) {
+  background: rgba(29, 72, 53, 0.56);
+}
+
+.player-stats-row:nth-child(even) {
+  background: rgba(16, 45, 36, 0.55);
+}
+
+.player-stats-row:last-child {
+  border-bottom: none;
+}
+
+/* Name and leaderboard position */
+
+.player-stats-name-area {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+}
+
+.player-stats-position {
+  flex: 0 0 30px;
+
+  color: var(--gold);
+  font-size: 17px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.player-stats-name {
+  min-width: 0;
+  color: var(--cream);
+
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: clamp(19px, 1.65vw, 28px);
+  font-weight: 700;
+  line-height: 1.2;
+
+  overflow-wrap: anywhere;
+}
+
+/* Rating */
+
+.player-stats-rating-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.player-stats-rating {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 69px;
+  min-height: 39px;
+
+  border: 1px solid rgba(212, 183, 120, 0.62);
+  color: var(--gold);
+  background: rgba(212, 183, 120, 0.05);
+
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Wins / losses */
+
+.player-stats-wins,
+.player-stats-losses {
+  font-family: "DM Sans", sans-serif;
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 1;
+
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.player-stats-wins {
+  color: var(--cream);
+}
+
+.player-stats-losses {
+  color: var(--muted);
+}
+
+/* ==========================================
+   FOOTER INFORMATION AND SPONSOR
+========================================== */
+
+.player-stats-explanation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  padding: 16px 5px 8px;
+
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.player-stats-sponsor {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+
+  margin-top: auto;
+  padding: 16px 4px 5px;
+}
+
+.player-stats-sponsor
+.court-view-sponsor-image-wrap {
+  background: transparent;
+  width: 180px;
+  height: 55px;
+  padding: 0;
+  border: 0;
+}
+
+.player-stats-sponsor
+.court-view-sponsor-image {
+  object-fit: contain;
+}
+
+/* Empty state */
+
+.player-stats-empty {
+  padding: 70px 24px;
+  border: 1px solid var(--border);
+  text-align: center;
+}
+
+.player-stats-empty h3 {
+  color: var(--cream);
+  font-size: 24px;
+}
+
+.player-stats-empty p {
+  color: var(--muted);
+}
+
+/* ==========================================
+   COACH — PLAYER RATING REGISTRATION
+========================================== */
+
+.player-rating-form {
+  grid-template-columns:
+    minmax(0, 1fr)
+    175px
+    auto;
+}
+
+.player-rating-form select {
+  min-width: 0;
+}
+
+.registered-player .coach-player-rating {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 38px;
+  padding: 4px 7px;
+
+  color: var(--gold);
+  border: 1px solid var(--border);
+
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+/* ==========================================
+   LARGE TV DISPLAYS
+========================================== */
+
+@media (min-width: 1600px) {
+  .player-stats-row {
+    min-height: 66px;
+  }
+
+  .player-stats-name {
+    font-size: 29px;
+  }
+
+  .player-stats-rating {
+    font-size: 28px;
+  }
+
+  .player-stats-wins,
+  .player-stats-losses {
+    font-size: 26px;
+  }
+}
+
+/* ==========================================
+   TABLETS / MEDIUM SCREENS
+========================================== */
+
+@media (min-width: 701px) and (max-width: 1100px) {
+  .player-stats-leaderboard {
+    gap: 12px;
+  }
+
+  .player-stats-column-heading,
+  .player-stats-row {
+    grid-template-columns:
+      minmax(0, 1fr)
+      65px
+      35px
+      35px;
+
+    column-gap: 4px;
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+
+  .player-stats-name-area {
+    gap: 5px;
+  }
+
+  .player-stats-position {
+    flex-basis: 22px;
+    font-size: 13px;
+  }
+
+  .player-stats-name {
+    font-size: clamp(15px, 1.8vw, 21px);
+  }
+
+  .player-stats-rating {
+    width: 51px;
+    min-height: 35px;
+    font-size: 20px;
+  }
+
+  .player-stats-wins,
+  .player-stats-losses {
+    font-size: 19px;
+  }
+
+  .player-stats-column-heading {
+    font-size: 9px;
+  }
+}
+
+/* ==========================================
+   MOBILE
+========================================== */
+
+@media (max-width: 700px) {
+  .player-stats-container {
+    padding: 12px 12px 20px;
+  }
+
+  .player-stats-heading {
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0 18px;
+  }
+
+  .player-stats-heading h2 {
+    font-size: clamp(28px, 6vw, 40px);
+  }
+
+  .player-stats-eyebrow {
+    font-size: 8px;
+    letter-spacing: 1px;
+  }
+
+  .player-stats-heading p {
+    font-size: 9px;
+  }
+
+  .player-stats-count strong {
+    font-size: 30px;
+  }
+
+  .player-stats-count span {
+    font-size: 8px;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .player-stats-leaderboard {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .player-stats-column-heading,
+  .player-stats-row {
+    grid-template-columns:
+      minmax(0, 1fr)
+      64px
+      38px
+      38px;
+
+    column-gap: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .player-stats-row {
+    min-height: 62px;
+  }
+
+  .player-stats-name-area {
+    gap: 7px;
+  }
+
+  .player-stats-position {
+    flex-basis: 24px;
+    font-size: 13px;
+  }
+
+  .player-stats-name {
+    font-size: clamp(16px, 4.3vw, 22px);
+  }
+
+  .player-stats-rating {
+    width: 53px;
+    min-height: 34px;
+    font-size: 21px;
+  }
+
+  .player-stats-wins,
+  .player-stats-losses {
+    font-size: 19px;
+  }
+
+  .player-stats-column-heading {
+    font-size: 9px;
+  }
+
+  .player-rating-form {
+    grid-template-columns: 1fr;
+  }
+
+  .player-stats-explanation {
+    font-size: 9px;
+  }
+
+  .player-stats-sponsor {
+    justify-content: center;
+    padding-top: 22px;
+  }
+}
+
+/* ==========================================
+   VERY SMALL PHONES
+========================================== */
+
+@media (max-width: 380px) {
+  .player-stats-column-heading,
+  .player-stats-row {
+    grid-template-columns:
+      minmax(0, 1fr)
+      52px
+      30px
+      30px;
+
+    column-gap: 3px;
+    padding-left: 7px;
+    padding-right: 7px;
+  }
+
+  .player-stats-position {
+    flex-basis: 19px;
+    font-size: 11px;
+  }
+
+  .player-stats-name {
+    font-size: 15px;
+  }
+
+  .player-stats-rating {
+    width: 45px;
+    min-height: 30px;
+    font-size: 18px;
+  }
+
+  .player-stats-wins,
+  .player-stats-losses {
+    font-size: 17px;
+  }
+}
+
+
+
+
+
+
+
+

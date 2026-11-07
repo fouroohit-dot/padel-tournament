@@ -1,388 +1,1030 @@
+
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import useTournament, { playerName } from "@/lib/useTournament";
+
+import useTournament, {
+  getCoachToken,
+  saveCoachToken,
+  clearCoachToken,
+  sendTournamentEvent,
+  stageLabel,
+  playerName,
+} from "@/lib/useTournament";
+
+import {
+  BroadcastStyles,
+  DigitalClock,
+} from "@/app/components/TournamentBroadcast";
+
+const RATINGS = ["D-", "D", "D+", "C-", "C", "C+"];
+
+const css = `
+  .ap-coach {
+    min-height:100vh;
+    background:radial-gradient(ellipse at top,#557272,#446463 55%,#395958);
+    color:#e4e2db;
+    font-family:"Helvetica Neue LT Pro","Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-weight:300;
+  }
+  .ap-coach * { box-sizing:border-box; }
+  .ap-coach button,.ap-coach input,.ap-coach select {
+    font:inherit;
+  }
+  .ap-coach button {
+    cursor:pointer;
+    transition:background .15s,border-color .15s;
+  }
+  .ap-coach button:disabled {
+    opacity:.45;
+    cursor:not-allowed;
+  }
+  .ap-coach h1,.ap-coach h2,.ap-coach h3 {
+    margin:0;
+    font-weight:500;
+    color:#e4e2db;
+  }
+  .ap-coach a { color:#e2cfa5; }
+  .ac-wrap {
+    width:100%;
+    max-width:1700px;
+    margin:auto;
+    padding:22px clamp(15px,3vw,46px) 42px;
+  }
+  .ac-header {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:20px;
+    padding-bottom:22px;
+    border-bottom:1px solid rgba(212,183,120,.48);
+  }
+  .ac-brand {
+    display:flex;
+    gap:16px;
+    align-items:center;
+    min-width:0;
+  }
+  .ac-brand img {
+    width:48px;
+    height:58px;
+    object-fit:contain;
+  }
+  .ac-brand h1 {
+    font-size:clamp(23px,2.4vw,36px);
+    letter-spacing:.05em;
+    line-height:1.1;
+  }
+  .ac-brand p {
+    margin:7px 0 0;
+    color:#d4b778;
+    font-size:12px;
+    letter-spacing:.05em;
+  }
+  .ac-header-right {
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+  }
+  .ac-online {
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:9px 12px;
+    border:1px solid rgba(213,220,220,.3);
+    font-size:11px;
+  }
+  .ac-online i {
+    display:block;
+    width:7px;height:7px;
+    border-radius:50%;
+    background:#d5dcdc;
+  }
+  .ac-btn {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:12px 17px;
+    border:1px solid #d4b778;
+    border-radius:3px;
+    background:#d4b778;
+    color:#294a49;
+    font-weight:500 !important;
+    text-decoration:none;
+    text-align:center;
+    min-height:44px;
+  }
+  .ac-btn.secondary {
+    border-color:rgba(213,220,220,.4);
+    background:rgba(213,220,220,.08);
+    color:#e4e2db;
+  }
+  .ac-btn.danger {
+    border-color:#be8980;
+    background:rgba(130,62,55,.24);
+    color:#ffe1dc;
+  }
+  .ac-eyebrow {
+    display:block;
+    font-size:11px;
+    font-weight:500;
+    letter-spacing:.05em;
+    color:#e2cfa5;
+    margin-bottom:9px;
+  }
+  .ac-heading {
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:16px;
+    margin:25px 0 20px;
+  }
+  .ac-heading h2 {
+    font-size:clamp(28px,3vw,43px);
+  }
+  .ac-heading p {
+    color:#d5dcdc;
+    margin:8px 0 0;
+    max-width:760px;
+    line-height:1.5;
+  }
+  .ac-panel {
+    min-width:0;
+    padding:20px;
+    border:1px solid rgba(213,220,220,.28);
+    border-top:2px solid rgba(212,183,120,.45);
+    background:linear-gradient(145deg,rgba(85,114,114,.62),rgba(57,89,88,.65));
+  }
+  .ac-panel h3 {
+    font-size:20px;
+    margin-bottom:12px;
+  }
+  .ac-panel p {
+    margin:0 0 14px;
+    line-height:1.5;
+    color:#d5dcdc;
+  }
+  .ac-grid {
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:15px;
+  }
+  .ac-kpis {
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:15px;
+    margin-bottom:19px;
+  }
+  .ac-kpi {
+    padding:18px 20px;
+    border:1px solid rgba(213,220,220,.26);
+    background:rgba(57,89,88,.36);
+  }
+  .ac-kpi small {
+    display:block;
+    margin-bottom:9px;
+    font-size:10px;
+    color:#d5dcdc;
+    letter-spacing:.05em;
+    font-weight:500;
+  }
+  .ac-kpi strong {
+    color:#e2cfa5;
+    font-size:clamp(23px,2.4vw,35px);
+    font-weight:500;
+  }
+  .ac-tabs {
+    display:flex;
+    gap:9px;
+    flex-wrap:wrap;
+    margin:0 0 18px;
+  }
+  .ac-tabs button {
+    padding:12px 24px;
+    background:rgba(213,220,220,.09);
+    color:#e4e2db;
+    border:1px solid rgba(213,220,220,.3);
+    font-weight:500;
+  }
+  .ac-tabs button.selected {
+    background:#d4b778;
+    color:#294a49;
+    border-color:#d4b778;
+  }
+  .ac-input {
+    width:100%;
+    min-width:0;
+    min-height:42px;
+    padding:10px;
+    border:1px solid #809595;
+    background:#395958;
+    color:#fff;
+    border-radius:2px;
+  }
+  .ac-roster {
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:10px;
+  }
+  .ac-edit-row {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 78px 65px;
+    gap:7px;
+    align-items:center;
+    padding:9px;
+    border:1px solid rgba(213,220,220,.18);
+    background:rgba(0,0,0,.055);
+  }
+  .ac-edit-row .ac-btn {
+    padding:9px 5px;
+    min-height:42px;
+    font-size:12px;
+  }
+  .ac-team {
+    margin-top:15px;
+    padding-top:13px;
+    border-top:1px solid rgba(213,220,220,.2);
+  }
+  .ac-team-label {
+    display:block;
+    font-weight:500;
+    color:#e2cfa5;
+    margin-bottom:9px;
+    font-size:12px;
+  }
+  .ac-selects {
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:8px;
+  }
+  .ac-notice {
+    margin:17px 0;
+    padding:12px 15px;
+    border-left:3px solid #d4b778;
+    background:rgba(212,183,120,.08);
+    color:#e4e2db;
+    line-height:1.5;
+  }
+  .ac-notice.error {
+    border-left-color:#ff9d92;
+    color:#ffe0dc;
+  }
+  .ac-live-top {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 235px;
+    gap:16px;
+    align-items:stretch;
+  }
+  .ac-ready-title {
+    font-size:clamp(25px,3vw,39px) !important;
+    margin:5px 0 12px !important;
+  }
+  .ac-ready-state {
+    color:#e2cfa5;
+    font-size:18px;
+    font-weight:500;
+  }
+  .ac-live-clock {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .ac-live-clock .nt-clock {
+    width:100%;
+    min-width:0;
+    max-width:none;
+  }
+  .ac-court-line {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    border-bottom:1px solid rgba(213,220,220,.2);
+    padding:12px 0;
+  }
+  .ac-court-line:last-child { border-bottom:0; }
+  .ac-court-line span {
+    color:#e2cfa5;
+    font-weight:500;
+    white-space:nowrap;
+  }
+  .ac-court-line small { color:#d5dcdc; }
+  .ac-links {
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin:16px 0;
+  }
+  .ac-links a { text-decoration:none; }
+  .ac-danger-zone {
+    margin-top:45px;
+    border-top:1px solid rgba(213,220,220,.3);
+    padding-top:20px;
+  }
+  .ac-overlay {
+    position:fixed;
+    inset:0;
+    z-index:1000;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:18px;
+    background:rgba(12,31,30,.78);
+    backdrop-filter:blur(5px);
+  }
+  .ac-dialog {
+    width:min(100%,480px);
+    padding:26px;
+    background:#446463;
+    border:1px solid #d4b778;
+    box-shadow:0 22px 80px rgba(0,0,0,.35);
+  }
+  .ac-dialog h2 {
+    font-size:27px;
+    margin:0 0 14px;
+  }
+  .ac-dialog p {
+    line-height:1.6;
+    margin-bottom:20px;
+    color:#d5dcdc;
+  }
+  .ac-dialog-actions {
+    display:flex;
+    gap:10px;
+    justify-content:flex-end;
+    flex-wrap:wrap;
+  }
+  .ac-dialog-actions .ac-btn { flex:1 1 140px; }
+  .ac-login {
+    max-width:460px;
+    margin:60px auto;
+  }
+  @media(max-width:1100px) {
+    .ac-grid,.ac-roster {
+      grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+  }
+  @media(max-width:700px) {
+    .ac-grid,.ac-roster,.ac-kpis,.ac-live-top {
+      grid-template-columns:1fr;
+    }
+    .ac-panel { padding:15px; }
+    .ac-header { align-items:flex-start; }
+    .ac-brand img { width:38px; }
+    .ac-heading { margin-top:18px; }
+    .ac-edit-row { grid-template-columns:minmax(0,1fr) 72px 62px; }
+    .ac-tabs button { flex:1; }
+    .ac-live-clock .nt-clock { max-width:220px; }
+  }
+`;
+
+function PlayerEditor({ player, onSave, busy }) {
+  const [name, setName] = useState(player.name);
+  const [rating, setRating] = useState(player.rating);
+
+  useEffect(() => {
+    setName(player.name);
+    setRating(player.rating);
+  }, [player.name, player.rating]);
+
+  const changed =
+    name.trim() !== player.name ||
+    rating !== player.rating;
+
+  return (
+    <div className="ac-edit-row">
+      <input
+        className="ac-input"
+        aria-label={`Player name ${player.id}`}
+        value={name}
+        maxLength={80}
+        onChange={(e) => setName(e.target.value)}
+      />
+
+      <select
+        className="ac-input"
+        aria-label={`Rating ${player.id}`}
+        value={rating}
+        onChange={(e) => setRating(e.target.value)}
+      >
+        {RATINGS.map((r) => (
+          <option key={r} value={r}>{r}</option>
+        ))}
+      </select>
+
+      <button
+        className="ac-btn"
+        disabled={busy || !changed || !name.trim()}
+        onClick={() => onSave(player.id, name, rating)}
+      >
+        Save
+      </button>
+    </div>
+  );
+}
+
+function ConfirmDialog({ dialog, onClose, onConfirm, busy }) {
+  if (!dialog) return null;
+
+  return (
+    <div className="ac-overlay">
+      <div
+        className="ac-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="ac-dialog-title"
+      >
+        <span className="ac-eyebrow">
+          TOURNAMENT CONTROL
+        </span>
+
+        <h2 id="ac-dialog-title">{dialog.title}</h2>
+        <p>{dialog.description}</p>
+
+        <div className="ac-dialog-actions">
+          <button
+            className="ac-btn secondary"
+            onClick={onClose}
+            disabled={busy}
+          >
+            Cancel
+          </button>
+
+          <button
+            className={`ac-btn ${dialog.danger ? "danger" : ""}`}
+            onClick={onConfirm}
+            disabled={busy}
+          >
+            {busy ? "Processing..." : dialog.confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function CoachDashboard() {
-  const { state, connected, token, login, logout, send } = useTournament();
+  const { state, connected } = useTournament();
 
+  const [token, setToken] = useState("");
   const [password, setPassword] = useState("");
-  const [newPlayer, setNewPlayer] = useState("");
-  const [message, setMessage] = useState("");
+  const [group, setGroup] = useState("A");
+
   const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [error, setError] = useState("");
+  const [dialog, setDialog] = useState(null);
 
-  async function action(event, payload = {}) {
-    if (busy) return;
+  useEffect(() => {
+    setToken(getCoachToken());
+  }, []);
 
+  async function run(event, payload = {}) {
     setBusy(true);
-    setMessage("");
+    setError("");
+    setNotice("");
 
     try {
-      await send(event, payload);
+      await sendTournamentEvent(event, payload);
+      setNotice("Changes saved successfully.");
       return true;
-    } catch (err) {
-      setMessage(err.message);
+    } catch (e) {
+      setError(e.message);
+
+      if (/unauthorized/i.test(e.message)) {
+        clearCoachToken();
+        setToken("");
+      }
+
       return false;
     } finally {
       setBusy(false);
     }
   }
 
-  async function handleLogin(e) {
+  async function login(e) {
     e.preventDefault();
-    setMessage("");
+    setBusy(true);
+    setError("");
 
     try {
-      await login(password);
+      const result = await sendTournamentEvent(
+        "coach:login",
+        { password },
+        false
+      );
+
+      saveCoachToken(result.token);
+      setToken(result.token);
       setPassword("");
-    } catch (err) {
-      setMessage(err.message);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
     }
   }
 
-  async function addPlayer(e) {
-    e.preventDefault();
-
-    const ok = await action("player:add", { name: newPlayer });
-
-    if (ok) setNewPlayer("");
+  function logout() {
+    clearCoachToken();
+    setToken("");
   }
 
-  if (!token) {
-    return (
-      <main className="auth-page">
-        <form className="auth-card" onSubmit={handleLogin}>
-          <div className="brand-emblem centered">P</div>
-          <span className="eyebrow gold">TOURNAMENT MANAGEMENT</span>
-          <h1>Coach Access</h1>
-          <p>Enter your tournament password to continue.</p>
+  function confirmAction(type) {
+    const dialogs = {
+      tournament: {
+        title: "Begin the tournament?",
+        description:
+          "This locks the starting partnerships for all three groups. " +
+          "Group A will load onto the screens with the clock paused. " +
+          "You will start its timer separately.",
+        confirmLabel: "Load Group A",
+        event: "tournament:start",
+      },
 
-          <label className="field-label">PASSWORD</label>
-          <input
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            placeholder="Tournament password"
-            required
-          />
+      timer: {
+        title: `Start ${stageLabel(state)}?`,
+        description:
+          "The 10-minute countdown will start simultaneously on " +
+          "all spectator and referee screens. Scoring will become available.",
+        confirmLabel: "Start Match",
+        event: "timer:start",
+        payload: { matchKey: state.matchKey },
+      },
 
-          {message && <p className="error-text">{message}</p>}
+      reset: {
+        title: "Reset the entire tournament?",
+        description:
+          "This permanently erases confirmed scores, rankings and " +
+          "knockout results and restores the 72 dummy players. " +
+          "This action cannot be undone.",
+        confirmLabel: "Reset Tournament",
+        danger: true,
+        event: "tournament:reset",
+      },
+    };
 
-          <button className="btn btn-gold" disabled={!connected}>
-            {connected ? "SIGN IN" : "CONNECTING..."}
-          </button>
-
-          <Link href="/" className="subtle-link">
-            ← Back to live scoreboard
-          </Link>
-        </form>
-      </main>
-    );
+    setDialog(dialogs[type]);
   }
 
-  if (!state) {
-    return <main className="loading-screen">Loading tournament...</main>;
-  }
+  async function acceptDialog() {
+    if (!dialog) return;
 
-  const setup = state.phase === "setup";
-  const completed = state.courts.filter(c => c.final).length;
-  const ready = completed === 6;
-
-  const allAssignments = state.courts.flatMap(
-    court => court.teams.flatMap(team => team.filter(Boolean))
-  );
-
-  const fullyAssigned =
-    state.players.length === 24 &&
-    allAssignments.length === 24 &&
-    new Set(allAssignments).size === 24;
-
-  async function resetTournament() {
-    const confirmed = window.confirm(
-      "Reset the entire tournament? All players and scores will be erased."
+    const success = await run(
+      dialog.event,
+      dialog.payload || {}
     );
 
-    if (confirmed) await action("tournament:reset");
+    if (success) setDialog(null);
   }
 
   return (
-    <main className="admin-page">
-      <header className="admin-header">
-        <div>
-          <span className="eyebrow gold">PADEL CHAMPIONSHIP</span>
-          <h1>Coach Dashboard</h1>
-          <p>Tournament management and court control</p>
-        </div>
+    <main className="ap-coach new-tourney">
+      <BroadcastStyles />
+      <style>{css}</style>
 
-        <div className="admin-header-actions">
-          <Link className="btn btn-outline" href="/" target="_blank">
-            SPECTATOR VIEW ↗
-          </Link>
-          <button className="btn btn-muted" onClick={logout}>
-            LOG OUT
-          </button>
-        </div>
-      </header>
-
-      {!connected && (
-        <div className="notice">
-          Connection lost. Changes are temporarily unavailable.
-        </div>
-      )}
-
-      {message && <div className="notice error">{message}</div>}
-
-      <section className="stats-grid">
-        <div className="stat-box">
-          <span>ROUND</span>
-          <strong>{state.round}</strong>
-        </div>
-        <div className="stat-box">
-          <span>REGISTERED PLAYERS</span>
-          <strong>{state.players.length}/24</strong>
-        </div>
-        <div className="stat-box">
-          <span>FINAL MATCHES</span>
-          <strong>{completed}/6</strong>
-        </div>
-        <div className="stat-box">
-          <span>TOURNAMENT STATUS</span>
-          <strong className="small-stat">
-            {setup ? "SETUP" : "LIVE"}
-          </strong>
-        </div>
-      </section>
-
-      {setup && (
-        <>
-          <section className="admin-panel">
-            <div className="section-heading">
-              <div>
-                <span className="eyebrow gold">STEP 01</span>
-                <h2>Register Players</h2>
-              </div>
-              <span>{state.players.length} / 24</span>
+      <div className="ac-wrap">
+        <header className="ac-header">
+          <div className="ac-brand">
+            <img src="/ap-logo.png" alt="AP" />
+            <div>
+              <h1>POWERFUL SUMMER DUBAI</h1>
+              <p>TOURNAMENT MANAGEMENT</p>
             </div>
+          </div>
 
-            <form className="player-form" onSubmit={addPlayer}>
+          <div className="ac-header-right">
+            <span className="ac-online">
+              <i />
+              {connected ? "CONNECTED" : "RECONNECTING"}
+            </span>
+
+            {token && (
+              <button className="ac-btn secondary" onClick={logout}>
+                Logout
+              </button>
+            )}
+          </div>
+        </header>
+
+        {error && (
+          <div className="ac-notice error" role="alert">
+            {error}
+          </div>
+        )}
+
+        {notice && (
+          <div className="ac-notice" role="status">
+            {notice}
+          </div>
+        )}
+
+        {!token ? (
+          <section className="ac-panel ac-login">
+            <span className="ac-eyebrow">SECURE ACCESS</span>
+            <h2>Coach Login</h2>
+            <p>Enter the tournament control password.</p>
+
+            <form onSubmit={login}>
               <input
-                value={newPlayer}
-                onChange={e => setNewPlayer(e.target.value)}
-                placeholder="Player full name"
-                maxLength={80}
+                className="ac-input"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Coach password"
                 required
-                disabled={state.players.length >= 24 || busy}
               />
+
               <button
-                className="btn btn-gold"
-                disabled={busy || !connected || state.players.length >= 24}
+                className="ac-btn"
+                style={{ width: "100%", marginTop: 13 }}
+                disabled={busy || !connected}
               >
-                ADD PLAYER +
+                {busy ? "Connecting..." : "Login"}
               </button>
             </form>
-
-            <div className="registered-grid">
-              {state.players.map((p, i) => (
-                <div className="registered-player" key={p.id}>
-                  <span>{String(i + 1).padStart(2, "0")}</span>
-                  <strong>{p.name}</strong>
-                  <button
-                    onClick={() => action("player:remove", { playerId: p.id })}
-                    disabled={busy || !connected}
-                    aria-label={`Remove ${p.name}`}
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
           </section>
+        ) : !state ? (
+          <div className="ac-notice">
+            Connecting to tournament state...
+          </div>
+        ) : (
+          <>
+            <div className="ac-links">
+              <Link className="ac-btn secondary" href="/" target="_blank">
+                Spectator Screen
+              </Link>
 
-          <section className="admin-panel">
-            <div className="section-heading">
-              <div>
-                <span className="eyebrow gold">STEP 02</span>
-                <h2>Assign Courts & Teams</h2>
-              </div>
+              <Link
+                className="ac-btn secondary"
+                href="/view/players"
+                target="_blank"
+              >
+                Player Rankings
+              </Link>
+
+              <Link
+                className="ac-btn secondary"
+                href="/view/bracket"
+                target="_blank"
+              >
+                Knockout Bracket
+              </Link>
             </div>
 
-            <div className="assignment-grid">
-              {state.courts.map(court => (
-                <div className="assignment-card" key={court.id}>
-                  <h3>COURT {String(court.id).padStart(2, "0")}</h3>
+            {state.phase === "setup" ? (
+              <>
+                <section className="ac-heading">
+                  <div>
+                    <span className="ac-eyebrow">
+                      PRE-TOURNAMENT SETUP
+                    </span>
 
-                  {[0, 1].map(team => (
-                    <div className="assignment-team" key={team}>
-                      <span className="field-label">
-                        TEAM {team + 1}
-                      </span>
+                    <h2>Players & Court Assignments</h2>
 
-                      {[0, 1].map(slot => {
-                        const selected = court.teams[team]?.[slot] || "";
+                    <p>
+                      Edit the three groups independently. All
+                      partnerships will remain fixed throughout
+                      the four group rounds.
+                    </p>
+                  </div>
+                </section>
 
-                        return (
-                          <select
-                            key={slot}
-                            value={selected}
-                            disabled={busy || !connected}
-                            onChange={e => action("court:assign", {
-                              courtId: court.id,
-                              team,
-                              slot,
-                              playerId: e.target.value || null,
-                            })}
-                          >
-                            <option value="">
-                              Select player {slot + 1}
-                            </option>
-                            {state.players
-                              .filter(p =>
-                                p.id === selected ||
-                                !allAssignments.includes(p.id)
-                              )
-                              .map(p => (
-                                <option key={p.id} value={p.id}>
-                                  {p.name}
-                                </option>
-                              ))}
-                          </select>
-                        );
-                      })}
-                    </div>
+                <div className="ac-kpis">
+                  {["A", "B", "C"].map((g) => {
+                    const ids = state.groups[g].courts
+                      .flatMap((court) => court.teams.flat())
+                      .filter(Boolean);
+
+                    return (
+                      <div className="ac-kpi" key={g}>
+                        <small>GROUP {g} · ASSIGNED PLAYERS</small>
+                        <strong>{ids.length} / 24</strong>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="ac-tabs">
+                  {["A", "B", "C"].map((g) => (
+                    <button
+                      key={g}
+                      className={group === g ? "selected" : ""}
+                      onClick={() => setGroup(g)}
+                    >
+                      GROUP {g}
+                    </button>
                   ))}
                 </div>
-              ))}
-            </div>
-          </section>
 
-          <section className="admin-panel">
-            <div className="section-heading">
-              <div>
-                <span className="eyebrow gold">STEP 03</span>
-                <h2>Scoring & Start</h2>
-              </div>
-            </div>
-
-            <label className="field-label">DEUCE SCORING</label>
-            <select
-              className="mode-select"
-              value={state.mode}
-              disabled={busy || !connected}
-              onChange={e => action("tournament:mode", {
-                mode: e.target.value,
-              })}
-            >
-              <option value="advantage">
-                Traditional Advantage
-              </option>
-              <option value="golden">
-                Golden Point
-              </option>
-            </select>
-
-            <p className="help-text">
-              Matches are played as one set to six games,
-              with a tiebreak at 6–6.
-            </p>
-
-            <button
-              className="btn btn-gold btn-large"
-              disabled={!fullyAssigned || busy || !connected}
-              onClick={() => action("tournament:start")}
-            >
-              START TOURNAMENT →
-            </button>
-
-            {!fullyAssigned && (
-              <p className="help-text">
-                Register and assign all 24 unique players to begin.
-              </p>
-            )}
-          </section>
-        </>
-      )}
-
-      {!setup && (
-        <>
-          <section className="admin-panel">
-            <div className="section-heading">
-              <div>
-                <span className="eyebrow gold">LIVE MANAGEMENT</span>
-                <h2>Court Control</h2>
-              </div>
-              <span>{completed} / 6 FINAL</span>
-            </div>
-
-            <div className="admin-courts-grid">
-              {state.courts.map(court => (
-                <div className="admin-court-card" key={court.id}>
-                  <div className="admin-court-title">
-                    <h3>COURT {court.id}</h3>
-                    <span className={`status ${court.final ? "done" : ""}`}>
-                      {court.final ? "FINAL" : "LIVE"}
+                <section className="ac-heading">
+                  <div>
+                    <span className="ac-eyebrow">
+                      GROUP {group}
                     </span>
+                    <h2>Player Roster</h2>
+                    <p>
+                      Update each dummy name and rating, then
+                      select Save for that player.
+                    </p>
+                  </div>
+                </section>
+
+                <div className="ac-roster">
+                  {state.groups[group].players.map((player) => (
+                    <PlayerEditor
+                      key={player.id}
+                      player={player}
+                      busy={busy}
+                      onSave={(playerId, name, rating) =>
+                        run("player:update", {
+                          playerId,
+                          name,
+                          rating,
+                        })
+                      }
+                    />
+                  ))}
+                </div>
+
+                <section className="ac-heading">
+                  <div>
+                    <span className="ac-eyebrow">
+                      FIXED PARTNERSHIPS
+                    </span>
+                    <h2>Starting Courts</h2>
+                    <p>
+                      Each court holds two teams of two. Selecting
+                      a player already assigned elsewhere moves
+                      them to the new slot.
+                    </p>
+                  </div>
+                </section>
+
+                <div className="ac-grid">
+                  {state.groups[group].courts.map((court) => (
+                    <section className="ac-panel" key={court.id}>
+                      <h3>
+                        COURT {String(court.id).padStart(2, "0")}
+                      </h3>
+
+                      {[0, 1].map((team) => (
+                        <div className="ac-team" key={team}>
+                          <span className="ac-team-label">
+                            TEAM {team + 1}
+                          </span>
+
+                          <div className="ac-selects">
+                            {[0, 1].map((slot) => (
+                              <select
+                                className="ac-input"
+                                key={slot}
+                                disabled={busy}
+                                value={court.teams[team][slot] || ""}
+                                onChange={(e) =>
+                                  run("court:assign", {
+                                    group,
+                                    courtId: court.id,
+                                    team,
+                                    slot,
+                                    playerId: e.target.value || null,
+                                  })
+                                }
+                              >
+                                <option value="">Unassigned</option>
+
+                                {state.groups[group].players.map(
+                                  (p) => (
+                                    <option key={p.id} value={p.id}>
+                                      {p.name} · {p.rating}
+                                    </option>
+                                  )
+                                )}
+                              </select>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </section>
+                  ))}
+                </div>
+
+                <section className="ac-panel" style={{ marginTop: 23 }}>
+                  <span className="ac-eyebrow">
+                    READY TO BEGIN
+                  </span>
+                  <h3>Start the Tournament</h3>
+
+                  <p>
+                    The tournament begins with Group A, Round 1.
+                    The timer stays paused until you press
+                    Start Match.
+                  </p>
+
+                  <button
+                    className="ac-btn"
+                    disabled={busy || !connected}
+                    onClick={() => confirmAction("tournament")}
+                  >
+                    Load Group A · Round 1
+                  </button>
+                </section>
+              </>
+            ) : (
+              <>
+                <section className="ac-heading">
+                  <div>
+                    <span className="ac-eyebrow">
+                      LIVE TOURNAMENT CONTROL
+                    </span>
+                    <h2>{stageLabel(state)}</h2>
+
+                    <p>
+                      The next group or bracket stage loads
+                      automatically after time expires and every
+                      scheduled court is confirmed.
+                    </p>
+                  </div>
+                </section>
+
+                <div className="ac-kpis">
+                  <div className="ac-kpi">
+                    <small>ACTIVE STAGE</small>
+                    <strong>{stageLabel(state)}</strong>
                   </div>
 
-                  {court.teams.map((team, i) => (
-                    <div className="admin-team-row" key={i}>
-                      <div>
-                        {team.map(id => playerName(state.players, id))
-                          .join(" / ")}
-                      </div>
-                      <strong>{court.score.games[i]}</strong>
-                    </div>
-                  ))}
+                  <div className="ac-kpi">
+                    <small>CONFIRMED COURTS</small>
+                    <strong>
+                      {state.confirmedCount} / {state.activeMatchCount}
+                    </strong>
+                  </div>
 
-                  <Link
-                    href={`/coach/court/${court.id}`}
-                    className="btn btn-gold"
-                  >
-                    OPEN COURT {court.id} →
-                  </Link>
+                  <div className="ac-kpi">
+                    <small>TOURNAMENT STATUS</small>
+                    <strong>
+                      {state.phase === "complete"
+                        ? "COMPLETE"
+                        : state.awaitingStart
+                        ? "READY"
+                        : state.timeExpired
+                        ? "TIME UP"
+                        : "IN PLAY"}
+                    </strong>
+                  </div>
                 </div>
-              ))}
-            </div>
-          </section>
 
-          <section className="admin-panel advancement-panel">
-            <span className="eyebrow gold">ROUND CONTROL</span>
-            <h2>Advance to Next Round</h2>
-            <p>
-              When all six referees have finalized their matches,
-              the winning pairs advance and losing pairs move down.
-            </p>
+                <div className="ac-live-top">
+                  <section className="ac-panel">
+                    <span className="ac-eyebrow">
+                      MATCH CONTROL
+                    </span>
 
-            <div className="progress-track">
-              <div style={{ width: `${completed / 6 * 100}%` }} />
-            </div>
+                    <h2 className="ac-ready-title">
+                      {state.phase === "complete"
+                        ? "Tournament Complete"
+                        : state.awaitingStart
+                        ? "Next Match Ready"
+                        : state.timeExpired
+                        ? "Awaiting Court Confirmations"
+                        : "Match in Progress"}
+                    </h2>
 
-            <p>{completed} of 6 matches finalized</p>
+                    {state.phase === "live" &&
+                      state.awaitingStart ? (
+                        <>
+                          <p>
+                            {stageLabel(state)} is now displayed
+                            on all six court screens.
+                            Start the countdown when the
+                            players are ready.
+                          </p>
 
-            <button
-              className="btn btn-gold btn-large"
-              disabled={!ready || busy || !connected}
-              onClick={() => action("tournament:advance")}
-            >
-              {ready
-                ? `GENERATE ROUND ${state.round + 1} →`
-                : "AWAITING FINAL RESULTS"}
-            </button>
-          </section>
-        </>
-      )}
+                          <button
+                            className="ac-btn"
+                            disabled={busy || !connected}
+                            onClick={() => confirmAction("timer")}
+                            style={{ minWidth: 210 }}
+                          >
+                            START MATCH · 10:00
+                          </button>
+                        </>
+                      ) : state.phase === "live" &&
+                        state.timeExpired ? (
+                        <p>
+                          Time has expired. Confirm all remaining
+                          scores to load the next stage.
+                        </p>
+                      ) : state.phase === "live" ? (
+                        <p>
+                          Match clock running. Referees can score
+                          on their assigned court devices.
+                        </p>
+                      ) : (
+                        <p>
+                          All final results have been recorded.
+                          View the bracket for final placements.
+                        </p>
+                      )}
+                  </section>
 
-      <section className="admin-panel danger-panel">
-        <h3>Tournament Administration</h3>
-        <p>Reset the tournament and clear all players and scores.</p>
-        <button
-          className="btn btn-danger"
-          onClick={resetTournament}
-          disabled={busy || !connected}
-        >
-          RESET TOURNAMENT
-        </button>
-      </section>
+                  <div className="ac-panel ac-live-clock">
+                    <DigitalClock
+                      timer={state.timer}
+                      phase={state.phase}
+                    />
+                  </div>
+                </div>
+
+                <section className="ac-heading">
+                  <div>
+                    <span className="ac-eyebrow">
+                      COURT MANAGEMENT
+                    </span>
+                    <h2>Match Confirmation Status</h2>
+                  </div>
+                </section>
+
+                <div className="ac-grid">
+                  {state.courts.map((court) => (
+                    <section className="ac-panel" key={court.id}>
+                      <span className="ac-eyebrow">
+                        COURT {String(court.id).padStart(2, "0")}
+                      </span>
+
+                      {court.active ? (
+                        <>
+                          {[0, 1].map((side) => (
+                            <div className="ac-court-line" key={side}>
+                              <small>
+                                {(court.teams[side] || [])
+                                  .map((id) =>
+                                    playerName(state.players, id)
+                                  )
+                                  .join(" / ")}
+                              </small>
+
+                              <span>
+                                {court.score.points[side]}
+                              </span>
+                            </div>
+                          ))}
+
+                          <div className="ac-court-line">
+                            <strong>
+                              {court.final
+                                ? "FINAL CONFIRMED"
+                                : state.awaitingStart
+                                ? "AWAITING START"
+                                : "IN PROGRESS"}
+                            </strong>
+                          </div>
+
+                          <Link
+                            className="ac-btn secondary"
+                            href={`/coach/court/${court.id}`}
+                            target="_blank"
+                            style={{ width: "100%", marginTop: 13 }}
+                          >
+                            Open Referee Screen
+                          </Link>
+                        </>
+                      ) : (
+                        <p>No scheduled match this stage.</p>
+                      )}
+                    </section>
+                  ))}
+                </div>
+              </>
+            )}
+
+            <section className="ac-danger-zone">
+              <span className="ac-eyebrow">
+                ADMINISTRATION
+              </span>
+
+              <button
+                className="ac-btn danger"
+                disabled={busy}
+                onClick={() => confirmAction("reset")}
+              >
+                Reset Entire Tournament
+              </button>
+            </section>
+          </>
+        )}
+      </div>
+
+      <ConfirmDialog
+        dialog={dialog}
+        busy={busy}
+        onClose={() => setDialog(null)}
+        onConfirm={acceptDialog}
+      />
     </main>
   );
 }
