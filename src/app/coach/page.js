@@ -5,20 +5,20 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 import useTournament, {
-  getCoachToken,
-  saveCoachToken,
-  clearCoachToken,
-  sendTournamentEvent,
-  stageLabel,
-  playerName,
+    getCoachToken,
+    saveCoachToken,
+    clearCoachToken,
+    sendTournamentEvent,
+    stageLabel,
+    playerName,
 } from "@/lib/useTournament";
 
 import {
-  BroadcastStyles,
-  DigitalClock,
+    BroadcastStyles,
+    DigitalClock,
 } from "@/app/components/TournamentBroadcast";
 
-const RATINGS = ["D-", "D", "D+", "C-", "C", "C+"];
+import QuarterfinalDraw from "./QuarterfinalDraw";
 
 const css = `
   .ap-coach {
@@ -231,15 +231,15 @@ const css = `
     grid-template-columns:repeat(3,minmax(0,1fr));
     gap:10px;
   }
-  .ac-edit-row {
-    display:grid;
-    grid-template-columns:minmax(0,1fr) 78px 65px;
-    gap:7px;
-    align-items:center;
-    padding:9px;
-    border:1px solid rgba(213,220,220,.18);
-    background:rgba(0,0,0,.055);
-  }
+.ac-edit-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 75px;
+  gap: 8px;
+  align-items: center;
+  padding: 9px;
+  border: 1px solid rgba(213, 220, 220, .18);
+  background: rgba(0, 0, 0, .055);
+}
   .ac-edit-row .ac-btn {
     padding:9px 5px;
     min-height:42px;
@@ -377,637 +377,663 @@ const css = `
     .ac-header { align-items:flex-start; }
     .ac-brand img { width:38px; }
     .ac-heading { margin-top:18px; }
-    .ac-edit-row { grid-template-columns:minmax(0,1fr) 72px 62px; }
+    .ac-edit-row {
+  grid-template-columns: minmax(0, 1fr) 75px;
+}
     .ac-tabs button { flex:1; }
     .ac-live-clock .nt-clock { max-width:220px; }
   }
 `;
 
 function PlayerEditor({ player, onSave, busy }) {
-  const [name, setName] = useState(player.name);
-  const [rating, setRating] = useState(player.rating);
+    const [name, setName] = useState(player.name);
 
-  useEffect(() => {
-    setName(player.name);
-    setRating(player.rating);
-  }, [player.name, player.rating]);
+    useEffect(() => {
+        setName(player.name);
+    }, [player.name]);
 
-  const changed =
-    name.trim() !== player.name ||
-    rating !== player.rating;
+    const changed = name.trim() !== player.name;
 
-  return (
-    <div className="ac-edit-row">
-      <input
-        className="ac-input"
-        aria-label={`Player name ${player.id}`}
-        value={name}
-        maxLength={80}
-        onChange={(e) => setName(e.target.value)}
-      />
+    return (
+        <div className="ac-edit-row">
+            <input
+                className="ac-input"
+                aria-label={`Player name ${player.id}`}
+                value={name}
+                maxLength={80}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Player full name"
+            />
 
-      <select
-        className="ac-input"
-        aria-label={`Rating ${player.id}`}
-        value={rating}
-        onChange={(e) => setRating(e.target.value)}
-      >
-        {RATINGS.map((r) => (
-          <option key={r} value={r}>{r}</option>
-        ))}
-      </select>
-
-      <button
-        className="ac-btn"
-        disabled={busy || !changed || !name.trim()}
-        onClick={() => onSave(player.id, name, rating)}
-      >
-        Save
-      </button>
-    </div>
-  );
+            <button
+                className="ac-btn"
+                disabled={busy || !changed || !name.trim()}
+                onClick={() => onSave(player.id, name)}
+            >
+                Save
+            </button>
+        </div>
+    );
 }
 
 function ConfirmDialog({ dialog, onClose, onConfirm, busy }) {
-  if (!dialog) return null;
+    if (!dialog) return null;
 
-  return (
-    <div className="ac-overlay">
-      <div
-        className="ac-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="ac-dialog-title"
-      >
-        <span className="ac-eyebrow">
-          TOURNAMENT CONTROL
-        </span>
+    return (
+        <div className="ac-overlay">
+            <div
+                className="ac-dialog"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="ac-dialog-title"
+            >
+                <span className="ac-eyebrow">
+                    TOURNAMENT CONTROL
+                </span>
 
-        <h2 id="ac-dialog-title">{dialog.title}</h2>
-        <p>{dialog.description}</p>
+                <h2 id="ac-dialog-title">{dialog.title}</h2>
+                <p>{dialog.description}</p>
 
-        <div className="ac-dialog-actions">
-          <button
-            className="ac-btn secondary"
-            onClick={onClose}
-            disabled={busy}
-          >
-            Cancel
-          </button>
+                <div className="ac-dialog-actions">
+                    <button
+                        className="ac-btn secondary"
+                        onClick={onClose}
+                        disabled={busy}
+                    >
+                        Cancel
+                    </button>
 
-          <button
-            className={`ac-btn ${dialog.danger ? "danger" : ""}`}
-            onClick={onConfirm}
-            disabled={busy}
-          >
-            {busy ? "Processing..." : dialog.confirmLabel}
-          </button>
+                    <button
+                        className={`ac-btn ${dialog.danger ? "danger" : ""}`}
+                        onClick={onConfirm}
+                        disabled={busy}
+                    >
+                        {busy ? "Processing..." : dialog.confirmLabel}
+                    </button>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 }
 
 export default function CoachDashboard() {
-  const { state, connected } = useTournament();
+    const { state, connected } = useTournament();
 
-  const [token, setToken] = useState("");
-  const [password, setPassword] = useState("");
-  const [group, setGroup] = useState("A");
+    const [token, setToken] = useState("");
+    const [password, setPassword] = useState("");
+    const [group, setGroup] = useState("A");
 
-  const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState("");
-  const [error, setError] = useState("");
-  const [dialog, setDialog] = useState(null);
+    const [busy, setBusy] = useState(false);
+    const [notice, setNotice] = useState("");
+    const [error, setError] = useState("");
+    const [dialog, setDialog] = useState(null);
 
-  useEffect(() => {
-    setToken(getCoachToken());
-  }, []);
+    useEffect(() => {
+        setToken(getCoachToken());
+    }, []);
 
-  async function run(event, payload = {}) {
-    setBusy(true);
-    setError("");
-    setNotice("");
+    async function run(event, payload = {}) {
+        setBusy(true);
+        setError("");
+        setNotice("");
 
-    try {
-      await sendTournamentEvent(event, payload);
-      setNotice("Changes saved successfully.");
-      return true;
-    } catch (e) {
-      setError(e.message);
+        try {
+            await sendTournamentEvent(event, payload);
+            setNotice("Changes saved successfully.");
+            return true;
+        } catch (e) {
+            setError(e.message);
 
-      if (/unauthorized/i.test(e.message)) {
+            if (/unauthorized/i.test(e.message)) {
+                clearCoachToken();
+                setToken("");
+            }
+
+            return false;
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    async function login(e) {
+        e.preventDefault();
+        setBusy(true);
+        setError("");
+
+        try {
+            const result = await sendTournamentEvent(
+                "coach:login",
+                { password },
+                false
+            );
+
+            saveCoachToken(result.token);
+            setToken(result.token);
+            setPassword("");
+        } catch (e) {
+            setError(e.message);
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    function logout() {
         clearCoachToken();
         setToken("");
-      }
-
-      return false;
-    } finally {
-      setBusy(false);
     }
-  }
 
-  async function login(e) {
-    e.preventDefault();
-    setBusy(true);
-    setError("");
+    function confirmAction(type) {
+        const dialogs = {
+            tournament: {
+                title: "Begin the tournament?",
+                description: ``,
+                confirmLabel: "Load Group A",
+                event: "tournament:start",
+            },
 
-    try {
-      const result = await sendTournamentEvent(
-        "coach:login",
-        { password },
-        false
-      );
+            timer: {
+                title: `Start ${stageLabel(state)}?`,
+                description: ``,
+                confirmLabel: "Start Match",
+                event: "timer:start",
+                payload: { matchKey: state.matchKey },
+            },
 
-      saveCoachToken(result.token);
-      setToken(result.token);
-      setPassword("");
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setBusy(false);
+            reset: {
+                title: "Reset the entire tournament?",
+                description:
+                    "This action cannot be undone.",
+                confirmLabel: "Reset Tournament",
+                danger: true,
+                event: "tournament:reset",
+            },
+        };
+
+        setDialog(dialogs[type]);
     }
-  }
 
-  function logout() {
-    clearCoachToken();
-    setToken("");
-  }
+    async function acceptDialog() {
+        if (!dialog) return;
 
-  function confirmAction(type) {
-    const dialogs = {
-      tournament: {
-        title: "Begin the tournament?",
-        description:``,
-        confirmLabel: "Load Group A",
-        event: "tournament:start",
-      },
+        const success = await run(
+            dialog.event,
+            dialog.payload || {}
+        );
 
-      timer: {
-        title: `Start ${stageLabel(state)}?`,
-        description:``,
-        confirmLabel: "Start Match",
-        event: "timer:start",
-        payload: { matchKey: state.matchKey },
-      },
+        if (success) setDialog(null);
+    }
 
-      reset: {
-        title: "Reset the entire tournament?",
-        description:
-          "This action cannot be undone.",
-        confirmLabel: "Reset Tournament",
-        danger: true,
-        event: "tournament:reset",
-      },
-    };
+    return (
+        <main className="ap-coach new-tourney">
+            <BroadcastStyles />
+            <style>{css}</style>
 
-    setDialog(dialogs[type]);
-  }
-
-  async function acceptDialog() {
-    if (!dialog) return;
-
-    const success = await run(
-      dialog.event,
-      dialog.payload || {}
-    );
-
-    if (success) setDialog(null);
-  }
-
-  return (
-    <main className="ap-coach new-tourney">
-      <BroadcastStyles />
-      <style>{css}</style>
-
-      <div className="ac-wrap">
-        <header className="ac-header">
-          <div className="ac-brand">
-            <img src="/ap-logo.png" alt="AP" />
-            <div>
-              <h1>POWERFUL SUMMER DUBAI</h1>
-            </div>
-          </div>
-
-          <div className="ac-header-right">
-            <span className="ac-online">
-              <i />
-              {connected ? "CONNECTED" : "RECONNECTING"}
-            </span>
-
-            {token && (
-              <button className="ac-btn secondary" onClick={logout}>
-                Logout
-              </button>
-            )}
-          </div>
-        </header>
-
-        {error && (
-          <div className="ac-notice error" role="alert">
-            {error}
-          </div>
-        )}
-
-        {notice && (
-          <div className="ac-notice" role="status">
-            {notice}
-          </div>
-        )}
-
-        {!token ? (
-          <section className="ac-panel ac-login">
-            <span className="ac-eyebrow">SECURE ACCESS</span>
-            <h2>Coach Login</h2>
-            <p>Enter the tournament control password.</p>
-
-            <form onSubmit={login}>
-              <input
-                className="ac-input"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Coach password"
-                required
-              />
-
-              <button
-                className="ac-btn"
-                style={{ width: "100%", marginTop: 13 }}
-                disabled={busy || !connected}
-              >
-                {busy ? "Connecting..." : "Login"}
-              </button>
-            </form>
-          </section>
-        ) : !state ? (
-          <div className="ac-notice">
-            Connecting to tournament state...
-          </div>
-        ) : (
-          <>
-            <div className="ac-links">
-              <Link className="ac-btn secondary" href="/" target="_blank">
-                Spectator Screen
-              </Link>
-
-              <Link
-                className="ac-btn secondary"
-                href="/view/players"
-                target="_blank"
-              >
-                Player Rankings
-              </Link>
-
-              <Link
-                className="ac-btn secondary"
-                href="/view/bracket"
-                target="_blank"
-              >
-                Knockout Bracket
-              </Link>
-            </div>
-
-            {state.phase === "setup" ? (
-              <>
-                <section className="ac-heading">
-                  <div>
-                    <span className="ac-eyebrow">
-                      PRE-TOURNAMENT SETUP
-                    </span>
-
-                    <h2>Players & Court Assignments</h2>
-
-                    <p>
-                      Edit the three groups independently. All
-                      partnerships will remain fixed throughout
-                      the four group rounds.
-                    </p>
-                  </div>
-                </section>
-
-                <div className="ac-kpis">
-                  {["A", "B", "C"].map((g) => {
-                    const ids = state.groups[g].courts
-                      .flatMap((court) => court.teams.flat())
-                      .filter(Boolean);
-
-                    return (
-                      <div className="ac-kpi" key={g}>
-                        <small>GROUP {g} · ASSIGNED PLAYERS</small>
-                        <strong>{ids.length} / 24</strong>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="ac-tabs">
-                  {["A", "B", "C"].map((g) => (
-                    <button
-                      key={g}
-                      className={group === g ? "selected" : ""}
-                      onClick={() => setGroup(g)}
-                    >
-                      GROUP {g}
-                    </button>
-                  ))}
-                </div>
-
-                <section className="ac-heading">
-                  <div>
-                    <span className="ac-eyebrow">
-                      GROUP {group}
-                    </span>
-                    <h2>Player Roster</h2>
-                    <p>
-                      Update each dummy name and rating, then
-                      select Save for that player.
-                    </p>
-                  </div>
-                </section>
-
-                <div className="ac-roster">
-                  {state.groups[group].players.map((player) => (
-                    <PlayerEditor
-                      key={player.id}
-                      player={player}
-                      busy={busy}
-                      onSave={(playerId, name, rating) =>
-                        run("player:update", {
-                          playerId,
-                          name,
-                          rating,
-                        })
-                      }
-                    />
-                  ))}
-                </div>
-
-                <section className="ac-heading">
-                  <div>
-                    <span className="ac-eyebrow">
-                      FIXED PARTNERSHIPS
-                    </span>
-                    <h2>Starting Courts</h2>
-                    <p>
-                      Each court holds two teams of two. Selecting
-                      a player already assigned elsewhere moves
-                      them to the new slot.
-                    </p>
-                  </div>
-                </section>
-
-                <div className="ac-grid">
-                  {state.groups[group].courts.map((court) => (
-                    <section className="ac-panel" key={court.id}>
-                      <h3>
-                        COURT {String(court.id).padStart(2, "0")}
-                      </h3>
-
-                      {[0, 1].map((team) => (
-                        <div className="ac-team" key={team}>
-                          <span className="ac-team-label">
-                            TEAM {team + 1}
-                          </span>
-
-                          <div className="ac-selects">
-                            {[0, 1].map((slot) => (
-                              <select
-                                className="ac-input"
-                                key={slot}
-                                disabled={busy}
-                                value={court.teams[team][slot] || ""}
-                                onChange={(e) =>
-                                  run("court:assign", {
-                                    group,
-                                    courtId: court.id,
-                                    team,
-                                    slot,
-                                    playerId: e.target.value || null,
-                                  })
-                                }
-                              >
-                                <option value="">Unassigned</option>
-
-                                {state.groups[group].players.map(
-                                  (p) => (
-                                    <option key={p.id} value={p.id}>
-                                      {p.name} · {p.rating}
-                                    </option>
-                                  )
-                                )}
-                              </select>
-                            ))}
-                          </div>
+            <div className="ac-wrap">
+                <header className="ac-header">
+                    <div className="ac-brand">
+                        <img src="/ap-logo.png" alt="AP" />
+                        <div>
+                            <h1>POWERFUL SUMMER DUBAI</h1>
                         </div>
-                      ))}
+                    </div>
+
+                    <div className="ac-header-right">
+                        <span className="ac-online">
+                            <i />
+                            {connected ? "CONNECTED" : "RECONNECTING"}
+                        </span>
+
+                        {token && (
+                            <button className="ac-btn secondary" onClick={logout}>
+                                Logout
+                            </button>
+                        )}
+                    </div>
+                </header>
+
+                {error && (
+                    <div className="ac-notice error" role="alert">
+                        {error}
+                    </div>
+                )}
+
+                {notice && (
+                    <div className="ac-notice" role="status">
+                        {notice}
+                    </div>
+                )}
+
+                {!token ? (
+                    <section className="ac-panel ac-login">
+                        <span className="ac-eyebrow">SECURE ACCESS</span>
+                        <h2>Coach Login</h2>
+                        <p>Enter the tournament control password.</p>
+
+                        <form onSubmit={login}>
+                            <input
+                                className="ac-input"
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="Coach password"
+                                required
+                            />
+
+                            <button
+                                className="ac-btn"
+                                style={{ width: "100%", marginTop: 13 }}
+                                disabled={busy || !connected}
+                            >
+                                {busy ? "Connecting..." : "Login"}
+                            </button>
+                        </form>
                     </section>
-                  ))}
-                </div>
+                ) : !state ? (
+                    <div className="ac-notice">
+                        Connecting to tournament state...
+                    </div>
+                ) : (
+                    <>
+                        <div className="ac-links">
+                            <Link className="ac-btn secondary" href="/" target="_blank">
+                                Spectator Screen
+                            </Link>
 
-                <section className="ac-panel" style={{ marginTop: 23 }}>
-                  <span className="ac-eyebrow">
-                    READY TO BEGIN
-                  </span>
-                  <h3>Start the Tournament</h3>
+                            <Link
+                                className="ac-btn secondary"
+                                href="/view/players"
+                                target="_blank"
+                            >
+                                Player Rankings
+                            </Link>
 
-                  <p>
-                    The tournament begins with Group A, Round 1.
-                    The timer stays paused until you press
-                    Start Match.
-                  </p>
+                            <Link
+                                className="ac-btn secondary"
+                                href="/view/bracket"
+                                target="_blank"
+                            >
+                                Knockout Bracket
+                            </Link>
+                        </div>
 
-                  <button
-                    className="ac-btn"
-                    disabled={busy || !connected}
-                    onClick={() => confirmAction("tournament")}
-                  >
-                    Load Group A · Round 1
-                  </button>
-                </section>
-              </>
-            ) : (
-              <>
-                <section className="ac-heading">
-                  <div>
-                    <h2>{stageLabel(state)}</h2>
-                  </div>
-                </section>
+                        {state.phase === "setup" ? (
+                            <>
+                                <section className="ac-heading">
+                                    <div>
+                                        <span className="ac-eyebrow">
+                                            PRE-TOURNAMENT SETUP
+                                        </span>
 
-                <div className="ac-kpis">
-                  <div className="ac-kpi">
-                    <small>ACTIVE STAGE</small>
-                    <strong>{stageLabel(state)}</strong>
-                  </div>
+                                        <h2>Players & Court Assignments</h2>
 
-                  <div className="ac-kpi">
-                    <small>CONFIRMED COURTS</small>
-                    <strong>
-                      {state.confirmedCount} / {state.activeMatchCount}
-                    </strong>
-                  </div>
+                                        <p>
+                                            Edit the three groups independently. All
+                                            partnerships will remain fixed throughout
+                                            the four group rounds.
+                                        </p>
+                                    </div>
+                                </section>
 
-                  <div className="ac-kpi">
-                    <small>TOURNAMENT STATUS</small>
-                    <strong>
-                      {state.phase === "complete"
-                        ? "COMPLETE"
-                        : state.awaitingStart
-                        ? "READY"
-                        : state.timeExpired
-                        ? "TIME UP"
-                        : "IN PLAY"}
-                    </strong>
-                  </div>
-                </div>
+                                <div className="ac-kpis">
+                                    {["A", "B", "C"].map((g) => {
+                                        const ids = state.groups[g].courts
+                                            .flatMap((court) => court.teams.flat())
+                                            .filter(Boolean);
 
-                <div className="ac-live-top">
-                  <section className="ac-panel">
-                    <span className="ac-eyebrow">
-                      MATCH CONTROL
-                    </span>
+                                        return (
+                                            <div className="ac-kpi" key={g}>
+                                                <small>GROUP {g} · ASSIGNED PLAYERS</small>
+                                                <strong>{ids.length} / 24</strong>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
 
-                    <h2 className="ac-ready-title">
-                      {state.phase === "complete"
-                        ? "Tournament Complete"
-                        : state.awaitingStart
-                        ? "Next Match Ready"
-                        : state.timeExpired
-                        ? "Awaiting Court Confirmations"
-                        : "Match in Progress"}
-                    </h2>
+                                <div className="ac-tabs">
+                                    {["A", "B", "C"].map((g) => (
+                                        <button
+                                            key={g}
+                                            className={group === g ? "selected" : ""}
+                                            onClick={() => setGroup(g)}
+                                        >
+                                            GROUP {g}
+                                        </button>
+                                    ))}
+                                </div>
 
-                    {state.phase === "live" &&
-                      state.awaitingStart ? (
-                        <>
-                          <p>
-                            {stageLabel(state)} is now displayed
-                            on all six court screens.
-                            Start the countdown when the
-                            players are ready.
-                          </p>
+                                <section className="ac-heading">
+                                    <div>
+                                        <span className="ac-eyebrow">
+                                            GROUP {group}
+                                        </span>
+                                        <h2>Player Roster</h2>
+                                        <p>
+                                            Add names.
+                                        </p>
+                                    </div>
+                                </section>
 
-                          <button
-                            className="ac-btn"
-                            disabled={busy || !connected}
-                            onClick={() => confirmAction("timer")}
-                            style={{ minWidth: 210 }}
-                          >
-                            START MATCH · 10:00
-                          </button>
-                        </>
-                      ) : state.phase === "live" &&
-                        state.timeExpired ? (
-                        <p>
-                          Time has expired. Confirm all remaining
-                          scores to load the next stage.
-                        </p>
-                      ) : state.phase === "live" ? (
-                        <p>
-                          Match clock running. Referees can score
-                          on their assigned court devices.
-                        </p>
-                      ) : (
-                        <p>
-                          All final results have been recorded.
-                          View the bracket for final placements.
-                        </p>
-                      )}
-                  </section>
+                                <div className="ac-roster">
+                                    {state.groups[group].players.map((player) => (
+                                        <PlayerEditor
+                                            key={player.id}
+                                            player={player}
+                                            busy={busy}
+                                            onSave={(playerId, name) =>
+                                                run("player:update", {
+                                                    playerId,
+                                                    name,
+                                                })
+                                            }
+                                        />
+                                    ))}
+                                </div>
 
-                  <div className="ac-panel ac-live-clock">
-                    <DigitalClock
-                      timer={state.timer}
-                      phase={state.phase}
-                    />
-                  </div>
-                </div>
+                                <section className="ac-heading">
+                                    <div>
+                                        <span className="ac-eyebrow">
+                                            FIXED PARTNERSHIPS
+                                        </span>
+                                        <h2>Starting Courts</h2>
+                                        <p>
+                                            Each court holds two teams of two. Selecting
+                                            a player already assigned elsewhere moves
+                                            them to the new slot.
+                                        </p>
+                                    </div>
+                                </section>
 
-                <section className="ac-heading">
-                  <div>
-                    <span className="ac-eyebrow">
-                      COURT MANAGEMENT
-                    </span>
-                    <h2>Match Confirmation Status</h2>
-                  </div>
-                </section>
+                                <div className="ac-grid">
+                                    {state.groups[group].courts.map((court) => (
+                                        <section className="ac-panel" key={court.id}>
+                                            <h3>
+                                                COURT {String(court.id).padStart(2, "0")}
+                                            </h3>
 
-                <div className="ac-grid">
-                  {state.courts.map((court) => (
-                    <section className="ac-panel" key={court.id}>
-                      <span className="ac-eyebrow">
-                        COURT {String(court.id).padStart(2, "0")}
-                      </span>
+                                            {[0, 1].map((team) => (
+                                                <div className="ac-team" key={team}>
+                                                    <span className="ac-team-label">
+                                                        TEAM {team + 1}
+                                                    </span>
 
-                      {court.active ? (
-                        <>
-                          {[0, 1].map((side) => (
-                            <div className="ac-court-line" key={side}>
-                              <small>
-                                {(court.teams[side] || [])
-                                  .map((id) =>
-                                    playerName(state.players, id)
-                                  )
-                                  .join(" / ")}
-                              </small>
+                                                    <div className="ac-selects">
+                                                        {[0, 1].map((slot) => (
+                                                            <select
+                                                                className="ac-input"
+                                                                key={slot}
+                                                                disabled={busy}
+                                                                value={court.teams[team][slot] || ""}
+                                                                onChange={(e) =>
+                                                                    run("court:assign", {
+                                                                        group,
+                                                                        courtId: court.id,
+                                                                        team,
+                                                                        slot,
+                                                                        playerId: e.target.value || null,
+                                                                    })
+                                                                }
+                                                            >
+                                                                <option value="">Unassigned</option>
 
-                              <span>
-                                {court.score.points[side]}
-                              </span>
-                            </div>
-                          ))}
+                                                                {state.groups[group].players.map(
+                                                                    (p) => (
+                                                                        <option key={p.id} value={p.id}>
+                                                                            {p.name}
+                                                                        </option>
+                                                                    )
+                                                                )}
+                                                            </select>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </section>
+                                    ))}
+                                </div>
 
-                          <div className="ac-court-line">
-                            <strong>
-                              {court.final
-                                ? "FINAL CONFIRMED"
-                                : state.awaitingStart
-                                ? "AWAITING START"
-                                : "IN PROGRESS"}
-                            </strong>
-                          </div>
+                                <section className="ac-panel" style={{ marginTop: 23 }}>
+                                    <span className="ac-eyebrow">
+                                        READY TO BEGIN
+                                    </span>
+                                    <h3>Start the Tournament</h3>
 
-                          <Link
-                            className="ac-btn secondary"
-                            href={`/coach/court/${court.id}`}
-                            target="_blank"
-                            style={{ width: "100%", marginTop: 13 }}
-                          >
-                            Open Referee Screen
-                          </Link>
-                        </>
-                      ) : (
-                        <p>No scheduled match this stage.</p>
-                      )}
-                    </section>
-                  ))}
-                </div>
-              </>
-            )}
+                                    <p>
+                                        The tournament begins with Group A, Round 1.
+                                        The timer stays paused until you press
+                                        Start Match.
+                                    </p>
 
-            <section className="ac-danger-zone">
-              <span className="ac-eyebrow">
-                RESET
-              </span>
+                                    <button
+                                        className="ac-btn"
+                                        disabled={busy || !connected}
+                                        onClick={() => confirmAction("tournament")}
+                                    >
+                                        Load Group A · Round 1
+                                    </button>
+                                </section>
+                            </>
+                        ) : (
+                            <>
+                                {/* <section className="ac-heading">
+                                    <div>
+                                        <h2>{stageLabel(state)}</h2>
+                                    </div>
+                                </section> */}
 
-              <button
-                className="ac-btn danger"
-                disabled={busy}
-                onClick={() => confirmAction("reset")}
-              >
-                Reset Entire Tournament
-              </button>
-            </section>
-          </>
-        )}
-      </div>
+                                {state.stage === "quarterfinals" && (
+                                    <QuarterfinalDraw
+                                        state={state}
+                                        connected={connected}
+                                    />
+                                )}
 
-      <ConfirmDialog
-        dialog={dialog}
-        busy={busy}
-        onClose={() => setDialog(null)}
-        onConfirm={acceptDialog}
-      />
-    </main>
-  );
+                                <div className="ac-kpis">
+                                    <div className="ac-kpi">
+                                        <small>ACTIVE STAGE</small>
+                                        <strong>{stageLabel(state)}</strong>
+                                    </div>
+
+                                    <div className="ac-kpi">
+                                        <small>CONFIRMED COURTS</small>
+                                        <strong>
+                                            {state.confirmedCount} / {state.activeMatchCount}
+                                        </strong>
+                                    </div>
+
+                                    <div className="ac-kpi">
+                                        <small>TOURNAMENT STATUS</small>
+                                        <strong>
+                                            {state.phase === "complete"
+                                                ? "COMPLETE"
+                                                : state.awaitingStart
+                                                    ? "READY"
+                                                    : state.timeExpired
+                                                        ? "TIME UP"
+                                                        : "IN PLAY"}
+                                        </strong>
+                                    </div>
+                                </div>
+
+                                <div className="ac-live-top">
+                                    <section className="ac-panel">
+                                        <span className="ac-eyebrow">
+                                            MATCH CONTROL
+                                        </span>
+
+                                        <h2 className="ac-ready-title">
+                                            {state.phase === "complete"
+                                                ? "Tournament Complete"
+                                                : state.awaitingStart
+                                                    ? "Next Match Ready"
+                                                    : state.timeExpired
+                                                        ? "Awaiting Court Confirmations"
+                                                        : state.stage !== "groups"
+                                                            ? "Knockout Match in Progress"
+                                                            : "Match in Progress"}
+                                        </h2>
+
+                                        {state.phase === "live" &&
+                                            state.awaitingStart ? (
+                                            <>
+                                                <p>
+                                                    {stageLabel(state)} is now displayed
+                                                    on all six court screens.
+                                                    Start the countdown when the
+                                                    players are ready.
+                                                </p>
+
+                                                <button
+                                                    className="ac-btn"
+                                                    disabled={busy || !connected}
+                                                    onClick={() => confirmAction("timer")}
+                                                    style={{ minWidth: 210 }}
+                                                >
+                                                    START MATCH · 10:00
+                                                </button>
+                                            </>
+                                        ) : state.phase === "live" &&
+                                            state.timeExpired ? (
+                                            <p>
+                                                Time has expired. Confirm all remaining
+                                                scores to load the next stage.
+                                            </p>
+                                        ) : state.phase === "live" ? (
+                                            <p>
+                                                Match clock running. Referees can score
+                                                on their assigned court devices.
+                                            </p>
+                                        ) : (
+                                            <p>
+                                                All final results have been recorded.
+                                                View the bracket for final placements.
+                                            </p>
+                                        )}
+                                    </section>
+
+
+                                    <div className="ac-panel ac-live-clock">
+                                        {state.stage === "groups" ? (
+                                            <DigitalClock
+                                                timer={state.timer}
+                                                phase={state.phase}
+                                            />
+                                        ) : (
+                                            <div
+                                                style={{
+                                                    textAlign: "center",
+                                                    width: "100%",
+                                                }}
+                                            >
+                                                <span className="ac-eyebrow">
+                                                    KNOCKOUT SCORING
+                                                </span>
+
+                                                <strong
+                                                    style={{
+                                                        display: "block",
+                                                        color: "#e2cfa5",
+                                                        fontSize: "clamp(27px, 3vw, 40px)",
+                                                        fontWeight: 500,
+                                                        lineHeight: 1.15,
+                                                    }}
+                                                >
+                                                    FIRST TO 10
+                                                </strong>
+
+                                                <p style={{ marginTop: 10 }}>
+                                                    No match timer
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                </div>
+
+                                <section className="ac-heading">
+                                    <div>
+                                        <span className="ac-eyebrow">
+                                            COURT MANAGEMENT
+                                        </span>
+                                        <h2>Match Confirmation Status</h2>
+                                    </div>
+                                </section>
+
+                                <div className="ac-grid">
+                                    {state.courts.map((court) => (
+                                        <section className="ac-panel" key={court.id}>
+                                            <span className="ac-eyebrow">
+                                                COURT {String(court.id).padStart(2, "0")}
+                                            </span>
+
+                                            {court.active ? (
+                                                <>
+                                                    {[0, 1].map((side) => (
+                                                        <div className="ac-court-line" key={side}>
+                                                            <small>
+                                                                {(court.teams[side] || [])
+                                                                    .map((id) =>
+                                                                        playerName(state.players, id)
+                                                                    )
+                                                                    .join(" / ")}
+                                                            </small>
+
+                                                            <span>
+                                                                {court.score.points[side]}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+
+                                                    <div className="ac-court-line">
+                                                        <strong>
+                                                            {court.final
+                                                                ? "FINAL CONFIRMED"
+                                                                : state.awaitingStart
+                                                                    ? "AWAITING START"
+                                                                    : "IN PROGRESS"}
+                                                        </strong>
+                                                    </div>
+
+                                                    <Link
+                                                        className="ac-btn secondary"
+                                                        href={`/coach/court/${court.id}`}
+                                                        target="_blank"
+                                                        style={{ width: "100%", marginTop: 13 }}
+                                                    >
+                                                        Open Referee Screen
+                                                    </Link>
+                                                </>
+                                            ) : (
+                                                <p>No scheduled match this stage.</p>
+                                            )}
+                                        </section>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+
+                        <section className="ac-danger-zone">
+                            <span className="ac-eyebrow">
+                                RESET
+                            </span>
+
+                            <button
+                                className="ac-btn danger"
+                                disabled={busy}
+                                onClick={() => confirmAction("reset")}
+                            >
+                                Reset Entire Tournament
+                            </button>
+                        </section>
+                    </>
+                )}
+            </div>
+
+            <ConfirmDialog
+                dialog={dialog}
+                busy={busy}
+                onClose={() => setDialog(null)}
+                onConfirm={acceptDialog}
+            />
+        </main>
+    );
 }

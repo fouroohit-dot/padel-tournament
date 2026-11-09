@@ -83,7 +83,7 @@ export default function SpectatorPage() {
           ))}
         </section>
 
-        {state.stage !== "groups" && (
+        {/* {state.stage !== "groups" && (
           <p style={{ textAlign: "right", marginTop: 20 }}>
             <a
               href="/view/bracket"
@@ -92,7 +92,7 @@ export default function SpectatorPage() {
               VIEW KNOCKOUT BRACKET
             </a>
           </p>
-        )}
+        )} */}
       </div>
     </main>
   );

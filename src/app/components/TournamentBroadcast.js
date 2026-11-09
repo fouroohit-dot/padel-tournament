@@ -82,53 +82,67 @@ export function Partners() {
   );
 }
 
+
 export function BroadcastHeader({ state, connected }) {
-  return (
-    <header className="nt-header">
-      <div className="nt-brand">
-        <img src="/ap-logo.png" alt="AP Tournament" />
-
-        <div>
-          <h1>POWERFUL SUMMER DUBAI</h1>
-          <div className="nt-title-underline" />
+    const groupStage = state?.stage === "groups";
+    const knockoutStage =
+      state?.stage === "quarterfinals" ||
+      state?.stage === "semifinals" ||
+      state?.stage === "finals";
+  
+    return (
+      <header className="nt-header">
+        <div className="nt-brand">
+          <img src="/ap-logo.png" alt="AP Tournament" />
+  
+          <div>
+            <h1>POWERFUL SUMMER DUBAI</h1>
+            {/* <div className="nt-title-underline" /> */}
+          </div>
         </div>
-      </div>
-
-      <div className="nt-header-info">
-        <div className="nt-stage">
-          <small>
-            {state?.stage === "groups"
-              ? "CURRENT ROUND"
-              : "CURRENT STAGE"}
-          </small>
-
-          <strong>
-            {state?.stage === "groups"
-              ? String(state.round).padStart(2, "0")
-              : stageLabel(state)}
-          </strong>
-
-          {state?.stage === "groups" && (
-            <span>GROUP {state.group}</span>
-          )}
+  
+        <div className="nt-header-info">
+          <div className="nt-stage">
+            <small>
+              {groupStage
+                ? "CURRENT ROUND"
+                : "CURRENT STAGE"}
+            </small>
+  
+            <strong>
+              {groupStage
+                ? String(state.round).padStart(2, "0")
+                : stageLabel(state)}
+            </strong>
+  
+            {groupStage && (
+              <span>GROUP {state.group}</span>
+            )}
+          </div>
+  
+          <div className="nt-connection">
+            <span
+              className={`nt-dot ${connected ? "live" : ""}`}
+            />
+            {connected ? "LIVE SCORES" : "RECONNECTING"}
+          </div>
+  
+          {groupStage ? (
+            <DigitalClock
+              timer={state?.timer}
+              phase={state?.phase}
+            />
+          ) : knockoutStage ? (
+            <div className="nt-stage">
+              <small>MATCH FORMAT</small>
+              <strong>FIRST TO 10</strong>
+            </div>
+          ) : null}
         </div>
-
-        <div className="nt-connection">
-          <span
-            className={`nt-dot ${connected ? "live" : ""}`}
-          />
-
-          {connected ? "LIVE SCORES" : "RECONNECTING"}
-        </div>
-
-        <DigitalClock
-          timer={state?.timer}
-          phase={state?.phase}
-        />
-      </div>
-    </header>
-  );
-}
+      </header>
+    );
+  }
+  
 
 export function CourtScoreboard({
   court,
