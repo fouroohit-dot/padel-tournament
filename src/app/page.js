@@ -63,7 +63,7 @@ export default function SpectatorPage() {
             <p>
               {state.phase === "setup"
                 ? "Awaiting tournament start"
-                : `${stageLabel(state)} · Live court updates`}
+                : ` Live court updates`}
             </p>
           </div>
 

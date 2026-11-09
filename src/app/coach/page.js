@@ -538,19 +538,14 @@ export default function CoachDashboard() {
     const dialogs = {
       tournament: {
         title: "Begin the tournament?",
-        description:
-          "This locks the starting partnerships for all three groups. " +
-          "Group A will load onto the screens with the clock paused. " +
-          "You will start its timer separately.",
+        description:``,
         confirmLabel: "Load Group A",
         event: "tournament:start",
       },
 
       timer: {
         title: `Start ${stageLabel(state)}?`,
-        description:
-          "The 10-minute countdown will start simultaneously on " +
-          "all spectator and referee screens. Scoring will become available.",
+        description:``,
         confirmLabel: "Start Match",
         event: "timer:start",
         payload: { matchKey: state.matchKey },
@@ -559,8 +554,6 @@ export default function CoachDashboard() {
       reset: {
         title: "Reset the entire tournament?",
         description:
-          "This permanently erases confirmed scores, rankings and " +
-          "knockout results and restores the 72 dummy players. " +
           "This action cannot be undone.",
         confirmLabel: "Reset Tournament",
         danger: true,
@@ -593,7 +586,6 @@ export default function CoachDashboard() {
             <img src="/ap-logo.png" alt="AP" />
             <div>
               <h1>POWERFUL SUMMER DUBAI</h1>
-              <p>TOURNAMENT MANAGEMENT</p>
             </div>
           </div>
 
@@ -838,16 +830,7 @@ export default function CoachDashboard() {
               <>
                 <section className="ac-heading">
                   <div>
-                    <span className="ac-eyebrow">
-                      LIVE TOURNAMENT CONTROL
-                    </span>
                     <h2>{stageLabel(state)}</h2>
-
-                    <p>
-                      The next group or bracket stage loads
-                      automatically after time expires and every
-                      scheduled court is confirmed.
-                    </p>
                   </div>
                 </section>
 
@@ -1004,7 +987,7 @@ export default function CoachDashboard() {
 
             <section className="ac-danger-zone">
               <span className="ac-eyebrow">
-                ADMINISTRATION
+                RESET
               </span>
 
               <button
