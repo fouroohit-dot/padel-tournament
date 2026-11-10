@@ -8,8 +8,10 @@ import {
   sendTournamentEvent,
 } from "@/lib/useTournament";
 
-const EMPTY_MATCHES = () =>
-  Array.from({ length: 4 }, (_, index) => ({
+const COURTS = [1, 2, 3, 4, 5, 6];
+
+function emptyDraw() {
+  return Array.from({ length: 4 }, (_, index) => ({
     id: `QF${index + 1}`,
     courtId: index + 1,
     teams: [
@@ -17,87 +19,199 @@ const EMPTY_MATCHES = () =>
       ["", ""],
     ],
   }));
+}
+
+function normalizeName(value) {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+/* ==========================================
+   CONFIRMED DRAW VIEW
+========================================== */
+
+function ConfirmedDraw({ state }) {
+  const matches =
+    state.bracket?.quarterfinals || [];
+
+  return (
+    <section
+      className="ac-panel"
+      style={{ marginTop: 20 }}
+    >
+      <span className="ac-eyebrow">
+        QUARTERFINAL DRAW
+      </span>
+
+      <h3>Confirmed Teams & Courts</h3>
+
+      <p>
+        All eight partnerships have been confirmed.
+        These teams will remain together for the
+        remainder of the knockout competition.
+      </p>
+
+      <div
+        className="ac-grid"
+        style={{ marginTop: 18 }}
+      >
+        {matches.map((match) => (
+          <section
+            className="ac-panel"
+            key={match.id}
+          >
+            <span className="ac-eyebrow">
+              {match.id} · COURT {match.courtId}
+            </span>
+
+            <h3>{match.label}</h3>
+
+            {[0, 1].map((side) => (
+              <div
+                className="ac-team"
+                key={side}
+              >
+                <span className="ac-team-label">
+                  TEAM {side + 1}
+                </span>
+
+                {(match.teams?.[side] || []).map(
+                  (id, index) => (
+                    <p
+                      key={id || index}
+                      style={{
+                        margin: "6px 0",
+                        fontWeight: 500,
+                        color: "#e4e2db",
+                      }}
+                    >
+                      {playerName(state.players, id)}
+                    </p>
+                  )
+                )}
+              </div>
+            ))}
+
+            <div
+              className="ac-notice"
+              style={{
+                marginTop: 14,
+                marginBottom: 0,
+              }}
+            >
+              {match.final
+                ? `FINAL · ${match.points[0]} – ${match.points[1]}`
+                : "First to 10 points · No timer"}
+            </div>
+          </section>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ==========================================
+   QUARTERFINAL DRAW
+========================================== */
 
 export default function QuarterfinalDraw({
   state,
   connected,
 }) {
-  const qualification = state?.qualification;
-
-  const qualifiedIds =
-    qualification?.qualifiedPlayerIds || [];
-
-  const qualifiedKey = qualifiedIds.join("|");
-
-  const [matches, setMatches] = useState(EMPTY_MATCHES);
+  const [matches, setMatches] = useState(emptyDraw);
   const [confirmOpen, setConfirmOpen] = useState(false);
+
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Initialize the draw whenever the qualified roster changes.
+  const drawConfirmed = Boolean(
+    state?.qualification?.drawConfirmed
+  );
+
+  // Reset the form when a new tournament begins
+  // or returns to the group stage.
+  const tournamentId = state?.startedAt || "setup";
+
   useEffect(() => {
-    setMatches(EMPTY_MATCHES());
+    setMatches(emptyDraw());
     setConfirmOpen(false);
     setError("");
     setSuccess("");
-  }, [qualifiedKey]);
+  }, [tournamentId]);
 
-  const confirmed = Boolean(
-    qualification?.drawConfirmed
-  );
+  /* ========================================
+     VALIDATE ALL 16 ENTRIES
+  ======================================== */
 
-  const assignedIds = useMemo(
-    () =>
-      matches.flatMap((match) =>
-        match.teams.flat().filter(Boolean)
-      ),
-    [matches]
-  );
+  const validation = useMemo(() => {
+    const names = matches.flatMap(
+      (match) =>
+        match.teams.flat().map(normalizeName)
+    );
 
-  const assignedCount = new Set(assignedIds).size;
+    const filled = names.filter(Boolean);
 
-  const duplicatePlayers =
-    assignedIds.length !== assignedCount;
+    const normalized = filled.map(
+      (name) => name.toLocaleLowerCase("en")
+    );
 
-  const assignedCourts = matches.map(
-    (match) => Number(match.courtId)
-  );
+    const courtIds = matches.map(
+      (match) => Number(match.courtId)
+    );
 
-  const duplicateCourts =
-    new Set(assignedCourts).size !== 4;
+    const duplicateNames =
+      new Set(normalized).size !== filled.length;
 
-  const valid = Boolean(
-    qualifiedIds.length === 16 &&
-    assignedIds.length === 16 &&
-    assignedCount === 16 &&
-    !duplicatePlayers &&
-    !duplicateCourts &&
-    assignedIds.every((id) => qualifiedIds.includes(id))
-  );
+    const duplicateCourts =
+      new Set(courtIds).size !== 4;
 
-  const qualifiers = useMemo(() => {
-    const all = state?.players || [];
+    const invalidNames = filled.some(
+      (name) => name.length > 80
+    );
 
-    return qualifiedIds.map((id) =>
-      all.find((player) => player.id === id)
-    ).filter(Boolean);
-  }, [state?.players, qualifiedKey]);
+    const complete =
+      names.length === 16 &&
+      filled.length === 16;
 
-  function updatePlayer(matchIndex, teamIndex, slot, id) {
+    return {
+      valid:
+        complete &&
+        !duplicateNames &&
+        !duplicateCourts &&
+        !invalidNames,
+
+      filledCount: filled.length,
+      duplicateNames,
+      duplicateCourts,
+      invalidNames,
+    };
+  }, [matches]);
+
+  /* ========================================
+     EDIT DRAW
+  ======================================== */
+
+  function updatePlayer(
+    matchIndex,
+    teamIndex,
+    slotIndex,
+    value
+  ) {
     setMatches((previous) =>
       previous.map((match, index) => {
-        if (index !== matchIndex) return match;
+        if (index !== matchIndex) {
+          return match;
+        }
 
-        const nextTeams = match.teams.map(
+        const teams = match.teams.map(
           (team) => [...team]
         );
 
-        nextTeams[teamIndex][slot] = id;
+        teams[teamIndex][slotIndex] = value;
 
         return {
           ...match,
-          teams: nextTeams,
+          teams,
         };
       })
     );
@@ -110,7 +224,10 @@ export default function QuarterfinalDraw({
     setMatches((previous) =>
       previous.map((match, index) =>
         index === matchIndex
-          ? { ...match, courtId: Number(courtId) }
+          ? {
+              ...match,
+              courtId: Number(courtId),
+            }
           : match
       )
     );
@@ -119,121 +236,127 @@ export default function QuarterfinalDraw({
     setSuccess("");
   }
 
+  /* ========================================
+     SAVE CONFIRMED DRAW
+  ======================================== */
+
   async function submitDraw() {
-    if (!valid || busy || !connected) return;
+    if (
+      !validation.valid ||
+      busy ||
+      !connected ||
+      drawConfirmed
+    ) {
+      return;
+    }
 
     setBusy(true);
     setError("");
     setSuccess("");
 
     try {
+      const payload = matches.map((match) => ({
+        courtId: Number(match.courtId),
+
+        teams: match.teams.map(
+          (team) =>
+            team.map((name) =>
+              normalizeName(name)
+            )
+        ),
+      }));
+
       await sendTournamentEvent(
         "knockout:draw:confirm",
         {
-          matches: matches.map((match) => ({
-            courtId: Number(match.courtId),
-            teams: match.teams.map((team) => [...team]),
-          })),
+          matches: payload,
         }
       );
 
       setConfirmOpen(false);
+
       setSuccess(
-        "Quarterfinal draw confirmed. All spectator and referee screens have been updated."
+        "Quarterfinal draw confirmed. " +
+        "All spectator and referee screens have been updated."
       );
-    } catch (error) {
-      setError(error.message);
+    } catch (err) {
+      setError(
+        err.message || "Unable to confirm the draw."
+      );
     } finally {
       setBusy(false);
     }
   }
 
+  /* ========================================
+     RENDER
+  ======================================== */
+
   if (state?.stage !== "quarterfinals") {
     return null;
   }
 
-  if (confirmed) {
-    return (
-      <section className="ac-panel">
-        <span className="ac-eyebrow">
-          QUARTERFINAL DRAW
-        </span>
-
-        <h3>Teams Confirmed</h3>
-
-        <p>
-          All eight partnerships are locked for the remainder
-          of the knockout competition.
-        </p>
-
-        <div
-          className="ac-grid"
-          style={{ marginTop: 16 }}
-        >
-          {(state.bracket?.quarterfinals || []).map(
-            (match) => (
-              <div
-                key={match.id}
-                className="ac-panel"
-              >
-                <span className="ac-eyebrow">
-                  {match.id} · COURT {match.courtId}
-                </span>
-
-                {match.teams.map((team, index) => (
-                  <p key={index}>
-                    <strong>Team {index + 1}</strong>
-                    {" — "}
-                    {team.map((id) =>
-                      playerName(state.players, id)
-                    ).join(" & ")}
-                  </p>
-                ))}
-              </div>
-            )
-          )}
-        </div>
-      </section>
-    );
+  if (drawConfirmed) {
+    return <ConfirmedDraw state={state} />;
   }
 
   return (
-    <section className="ac-panel" style={{ marginTop: 20 }}>
+    <section
+      className="ac-panel"
+      style={{ marginTop: 20 }}
+    >
       <span className="ac-eyebrow">
         KNOCKOUT PREPARATION
       </span>
 
-      <h3>Quarterfinal Draw & Court Assignments</h3>
+      <h3>Manual Quarterfinal Draw</h3>
 
       <p>
-        The top 16 qualified players are ready. Draw the
-        partnerships, choose which teams face each other,
-        then assign a physical court to each quarterfinal.
-        Partners remain together through the semifinals,
-        championship final, and bronze match.
+        Enter 16 player names manually, including
+        any last-minute replacements. Select two
+        players per team and assign a court to
+        each quarterfinal match.
+      </p>
+
+      <p>
+        Partnerships will remain fixed through
+        the semifinals, bronze match, and final.
       </p>
 
       {error && (
-        <div className="ac-notice error" role="alert">
+        <div
+          className="ac-notice error"
+          role="alert"
+        >
           {error}
         </div>
       )}
 
       {success && (
-        <div className="ac-notice" role="status">
+        <div
+          className="ac-notice"
+          role="status"
+        >
           {success}
         </div>
       )}
 
+      {/* ==================================
+          ASSIGNMENT STATUS
+      ================================== */}
+
       <div className="ac-kpis">
         <div className="ac-kpi">
-          <small>QUALIFIED PLAYERS</small>
-          <strong>{qualifiedIds.length} / 16</strong>
+          <small>PLAYERS ENTERED</small>
+
+          <strong>
+            {validation.filledCount} / 16
+          </strong>
         </div>
 
         <div className="ac-kpi">
-          <small>ASSIGNED PLAYERS</small>
-          <strong>{assignedCount} / 16</strong>
+          <small>TEAMS</small>
+          <strong>08</strong>
         </div>
 
         <div className="ac-kpi">
@@ -242,167 +365,155 @@ export default function QuarterfinalDraw({
         </div>
       </div>
 
-      <div className="ac-panel">
-        <span className="ac-eyebrow">
-          QUALIFIED PLAYER POOL
-        </span>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns:
-              "repeat(auto-fit, minmax(160px, 1fr))",
-            gap: 9,
-          }}
-        >
-          {qualifiers.map((player) => {
-            const used = assignedIds.includes(player.id);
-
-            return (
-              <div
-                key={player.id}
-                style={{
-                  border: "1px solid rgba(213,220,220,.25)",
-                  padding: "10px 12px",
-                  opacity: used ? 0.5 : 1,
-                }}
-              >
-                <strong>{player.name}</strong>
-
-                <div
-                  style={{
-                    color: "#D5DCDC",
-                    fontSize: 11,
-                    marginTop: 5,
-                  }}
-                >
-                  GROUP {player.group}
-                  {" · "}
-                  {used ? "ASSIGNED" : "AVAILABLE"}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      {/* ==================================
+          QUARTERFINAL ASSIGNMENTS
+      ================================== */}
 
       <div
         className="ac-grid"
-        style={{ marginTop: 19 }}
+        style={{ marginTop: 20 }}
       >
-        {matches.map((match, matchIndex) => (
-          <section
-            className="ac-panel"
-            key={match.id}
-          >
-            <span className="ac-eyebrow">
-              KNOCKOUT MATCH
-            </span>
-
-            <h3>{match.id}</h3>
-
-            <label
-              style={{
-                display: "block",
-                marginBottom: 8,
-                fontSize: 12,
-              }}
+        {matches.map(
+          (match, matchIndex) => (
+            <section
+              className="ac-panel"
+              key={match.id}
             >
-              Playing on Court
-            </label>
+              <span className="ac-eyebrow">
+                QUARTERFINAL MATCH
+              </span>
 
-            <select
-              className="ac-input"
-              value={match.courtId}
-              onChange={(event) =>
-                updateCourt(matchIndex, event.target.value)
-              }
-              disabled={busy}
-            >
-              {[1, 2, 3, 4, 5, 6].map((courtId) => (
-                <option
-                  key={courtId}
-                  value={courtId}
-                >
-                  Court {courtId}
-                </option>
-              ))}
-            </select>
+              <h3>{match.id}</h3>
 
-            {[0, 1].map((teamIndex) => (
-              <div
-                className="ac-team"
-                key={teamIndex}
+              <label
+                htmlFor={`court-${match.id}`}
+                style={{
+                  display: "block",
+                  margin: "15px 0 8px",
+                  fontSize: 12,
+                  color: "#D5DCDC",
+                }}
               >
-                <span className="ac-team-label">
-                  TEAM {teamIndex + 1}
-                </span>
+                Playing on Court
+              </label>
 
-                <div className="ac-selects">
-                  {[0, 1].map((slot) => {
-                    const currentId =
-                      match.teams[teamIndex][slot];
+              <select
+                id={`court-${match.id}`}
+                className="ac-input"
+                value={match.courtId}
+                disabled={busy}
+                onChange={(event) =>
+                  updateCourt(
+                    matchIndex,
+                    event.target.value
+                  )
+                }
+              >
+                {COURTS.map((courtId) => (
+                  <option
+                    key={courtId}
+                    value={courtId}
+                  >
+                    Court {courtId}
+                  </option>
+                ))}
+              </select>
 
-                    return (
-                      <select
+              {[0, 1].map((teamIndex) => (
+                <div
+                  className="ac-team"
+                  key={teamIndex}
+                >
+                  <span className="ac-team-label">
+                    TEAM {teamIndex + 1}
+                  </span>
+
+                  <div className="ac-selects">
+                    {[0, 1].map((slotIndex) => (
+                      <input
+                        key={slotIndex}
                         className="ac-input"
-                        key={slot}
-                        value={currentId}
-                        disabled={busy}
-                        aria-label={
-                          `${match.id} Team ${teamIndex + 1} ` +
-                          `Player ${slot + 1}`
+                        type="text"
+                        maxLength={80}
+                        autoComplete="off"
+                        placeholder={
+                          `Player ${slotIndex + 1}`
                         }
+                        aria-label={
+                          `${match.id}, team ${teamIndex + 1}, ` +
+                          `player ${slotIndex + 1}`
+                        }
+                        value={
+                          match.teams[teamIndex][slotIndex]
+                        }
+                        disabled={busy}
                         onChange={(event) =>
                           updatePlayer(
                             matchIndex,
                             teamIndex,
-                            slot,
+                            slotIndex,
                             event.target.value
                           )
                         }
-                      >
-                        <option value="">
-                          Select Player
-                        </option>
-
-                        {qualifiers.map((player) => {
-                          const usedElsewhere =
-                            assignedIds.includes(player.id) &&
-                            player.id !== currentId;
-
-                          return (
-                            <option
-                              key={player.id}
-                              value={player.id}
-                              disabled={usedElsewhere}
-                            >
-                              {player.name}
-                            </option>
-                          );
-                        })}
-                      </select>
-                    );
-                  })}
+                      />
+                    ))}
+                  </div>
                 </div>
+              ))}
+
+              <div
+                className="ac-notice"
+                style={{
+                  marginTop: 16,
+                  marginBottom: 0,
+                }}
+              >
+                First to 10 points · No timer
               </div>
-            ))}
-          </section>
-        ))}
+            </section>
+          )
+        )}
       </div>
 
-      {duplicatePlayers && (
-        <div className="ac-notice error">
-          A player has been assigned more than once.
+      {/* ==================================
+          VALIDATION MESSAGES
+      ================================== */}
+
+      {validation.duplicateNames && (
+        <div
+          className="ac-notice error"
+          role="alert"
+        >
+          A player name has been entered more
+          than once. Each player must appear
+          on exactly one team.
         </div>
       )}
 
-      {duplicateCourts && (
-        <div className="ac-notice error">
-          Two quarterfinal matches share the same court.
-          Select four different courts.
+      {validation.duplicateCourts && (
+        <div
+          className="ac-notice error"
+          role="alert"
+        >
+          Two quarterfinal matches are assigned
+          to the same court. Select four different
+          courts.
         </div>
       )}
+
+      {validation.invalidNames && (
+        <div
+          className="ac-notice error"
+          role="alert"
+        >
+          Each player name must contain no more
+          than 80 characters.
+        </div>
+      )}
+
+      {/* ==================================
+          DRAW CONFIRMATION
+      ================================== */}
 
       <div
         className="ac-panel"
@@ -412,23 +523,36 @@ export default function QuarterfinalDraw({
           FINALISE THE DRAW
         </span>
 
-        <h3>Confirm Quarterfinal Assignments</h3>
+        <h3>Confirm Quarterfinal Teams</h3>
 
         <p>
-          QF1 and QF2 feed Semifinal 1. QF3 and QF4
-          feed Semifinal 2. The semifinal winners play
-          for gold and the losers play for bronze.
+          Review all 16 names, eight partnerships,
+          four matchups and court assignments
+          before proceeding.
+        </p>
+
+        <p>
+          QF1 and QF2 feed Semifinal 1.
+          QF3 and QF4 feed Semifinal 2.
         </p>
 
         <button
           type="button"
           className="ac-btn"
-          disabled={!valid || !connected || busy}
+          disabled={
+            !validation.valid ||
+            !connected ||
+            busy
+          }
           onClick={() => setConfirmOpen(true)}
         >
           CONFIRM QUARTERFINAL DRAW
         </button>
       </div>
+
+      {/* ==================================
+          STYLED CONFIRMATION MODAL
+      ================================== */}
 
       {confirmOpen && (
         <div className="ac-overlay">
@@ -436,21 +560,26 @@ export default function QuarterfinalDraw({
             className="ac-dialog"
             role="dialog"
             aria-modal="true"
-            aria-labelledby="qf-confirm-title"
+            aria-labelledby="qf-confirm-heading"
           >
             <span className="ac-eyebrow">
               QUARTERFINAL DRAW
             </span>
 
-            <h2 id="qf-confirm-title">
+            <h2 id="qf-confirm-heading">
               Lock All Eight Teams?
             </h2>
 
             <p>
-              This confirms all 16 players, eight
-              partnerships, four matchups, and four
-              court assignments. These teams will
-              remain together until the tournament ends.
+              You are about to confirm all
+              16 player names, eight partnerships,
+              four quarterfinal matchups and
+              four playing courts.
+            </p>
+
+            <p>
+              The partnerships will remain locked
+              for the rest of the knockout competition.
             </p>
 
             <div className="ac-dialog-actions">
@@ -458,7 +587,9 @@ export default function QuarterfinalDraw({
                 type="button"
                 className="ac-btn secondary"
                 disabled={busy}
-                onClick={() => setConfirmOpen(false)}
+                onClick={() =>
+                  setConfirmOpen(false)
+                }
               >
                 Go Back
               </button>
@@ -466,10 +597,16 @@ export default function QuarterfinalDraw({
               <button
                 type="button"
                 className="ac-btn"
-                disabled={busy || !valid || !connected}
+                disabled={
+                  busy ||
+                  !connected ||
+                  !validation.valid
+                }
                 onClick={submitDraw}
               >
-                {busy ? "Saving..." : "Confirm Draw"}
+                {busy
+                  ? "Saving..."
+                  : "Confirm Draw"}
               </button>
             </div>
           </section>

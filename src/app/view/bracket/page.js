@@ -12,7 +12,7 @@ import {
 } from "@/app/components/TournamentBroadcast";
 
 /* ==========================================
-   MATCH CARD
+   BRACKET MATCH CARD
 ========================================== */
 
 function MatchCard({
@@ -21,11 +21,17 @@ function MatchCard({
   placeholder,
   bronze = false,
 }) {
-  function names(side) {
+  function teamNames(side) {
     const team = match?.teams?.[side];
 
-    if (!Array.isArray(team) || !team.some(Boolean)) {
-      return placeholder?.[side] || "To be determined";
+    if (
+      !Array.isArray(team) ||
+      !team.some(Boolean)
+    ) {
+      return (
+        placeholder?.[side] ||
+        "To be determined"
+      );
     }
 
     return team
@@ -34,7 +40,7 @@ function MatchCard({
       .join(" / ");
   }
 
-  const matchTitle =
+  const title =
     match?.label ||
     placeholder?.title ||
     "Upcoming";
@@ -51,7 +57,7 @@ function MatchCard({
     >
       <div className="bracket-match-title">
         {bronze ? "" : ""}
-        {matchTitle}
+        {title}
         {courtLabel}
       </div>
 
@@ -67,7 +73,7 @@ function MatchCard({
               isWinner ? "winner" : ""
             }`}
           >
-            <span>{names(side)}</span>
+            <span>{teamNames(side)}</span>
 
             {match?.final && (
               <strong>
@@ -82,7 +88,7 @@ function MatchCard({
 }
 
 /* ==========================================
-   MAIN BRACKET PAGE
+   MAIN BRACKET
 ========================================== */
 
 export default function KnockoutBracketPage() {
@@ -121,9 +127,23 @@ export default function KnockoutBracketPage() {
     quarterfinals.length === 4
   );
 
-  const hasQualified = Boolean(
-    state.qualification?.qualifiedPlayerIds?.length === 16
-  );
+  const drawPending =
+    state.stage === "quarterfinals" &&
+    !drawConfirmed;
+
+  function quarterfinalPlaceholder(index) {
+    const message = drawPending
+      ? "Awaiting coach draw"
+      : !drawConfirmed
+      ? "Awaiting manual assignments"
+      : "Qualified team";
+
+    return {
+      title: `Quarterfinal ${index + 1}`,
+      0: message,
+      1: message,
+    };
+  }
 
   return (
     <main className="new-tourney">
@@ -153,6 +173,7 @@ export default function KnockoutBracketPage() {
           display: flex;
           flex-direction: column;
           justify-content: space-around;
+
           gap: 22px;
           min-width: 0;
         }
@@ -204,11 +225,10 @@ export default function KnockoutBracketPage() {
 
           gap: 10px;
           min-height: 49px;
-
           padding: 8px 0;
 
           border-top: 1px solid
-            rgba(213, 220, 220, 0.25);
+            rgba(213,220,220,.25);
 
           font-size: clamp(
             14px,
@@ -257,7 +277,7 @@ export default function KnockoutBracketPage() {
             212,
             183,
             120,
-            0.6
+            .6
           );
         }
 
@@ -276,7 +296,7 @@ export default function KnockoutBracketPage() {
         }
 
         /* ==================================
-           TABLET / MOBILE
+           TABLET AND MOBILE
         ================================== */
 
         @media (max-width: 1000px) {
@@ -305,24 +325,23 @@ export default function KnockoutBracketPage() {
       `}</style>
 
       <div className="nt-container">
-        {/* Shared AP broadcast header */}
+        {/* Shared AP header */}
         <BroadcastHeader
           state={state}
           connected={connected}
         />
 
-        {/* Page heading and partner logos */}
+        {/* Page heading and sponsor logos */}
         <section className="nt-section-head">
           <div>
             <h2>Championship Bracket</h2>
-
           </div>
 
           <Partners />
         </section>
 
         {/* ==================================
-            BRACKET COLUMNS
+            BRACKET CONTENT
         ================================== */}
 
         <div className="bracket-layout">
@@ -336,21 +355,9 @@ export default function KnockoutBracketPage() {
                 key={`qf-${index}`}
                 match={quarterfinals[index]}
                 players={state.players}
-                placeholder={{
-                  title: `Quarterfinal ${index + 1}`,
-
-                  0: drawConfirmed
-                    ? "Qualified team"
-                    : hasQualified
-                    ? "Awaiting coach draw"
-                    : "Awaiting group rankings",
-
-                  1: drawConfirmed
-                    ? "Qualified team"
-                    : hasQualified
-                    ? "Awaiting coach draw"
-                    : "Awaiting group rankings",
-                }}
+                placeholder={
+                  quarterfinalPlaceholder(index)
+                }
               />
             ))}
           </section>
@@ -395,7 +402,6 @@ export default function KnockoutBracketPage() {
               players={state.players}
               placeholder={{
                 title: "Championship Final",
-
                 0: "Winner SF 1",
                 1: "Winner SF 2",
               }}
@@ -407,7 +413,6 @@ export default function KnockoutBracketPage() {
               bronze
               placeholder={{
                 title: "Bronze",
-
                 0: "Loser SF 1",
                 1: "Loser SF 2",
               }}
@@ -416,14 +421,14 @@ export default function KnockoutBracketPage() {
         </div>
 
         {/* ==================================
-            DYNAMIC STATUS
+            LIVE STATUS
         ================================== */}
 
         <p className="bracket-note">
-          {!hasQualified
-            ? "Quarterfinal qualification will be determined after Group C, Round 4."
+          {drawPending
+            ? "Manual quarterfinal draw in progress · Awaiting coach confirmation."
             : !drawConfirmed
-            ? "16 players qualified · Awaiting coach to assign partnerships, matchups and courts."
+            ? "Quarterfinal players and teams will be manually assigned after Group C, Round 4."
             : state.stage === "complete"
             ? "Tournament complete · Final results confirmed."
             : "Quarterfinal draw confirmed · Fixed partnerships · First to 10 points."}

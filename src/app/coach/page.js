@@ -654,6 +654,14 @@ export default function CoachDashboard() {
                             >
                                 Knockout Bracket
                             </Link>
+                            <Link
+                                className="ac-btn secondary"
+                                href="/view/starting-courts"
+                                target="_blank"
+                            >
+                                Starting Courts & Times
+                            </Link>
+
                         </div>
 
                         {state.phase === "setup" ? (

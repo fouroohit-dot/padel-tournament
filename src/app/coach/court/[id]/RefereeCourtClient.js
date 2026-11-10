@@ -546,9 +546,7 @@ export default function RefereeCourtClient() {
       type: "finalize",
       title: "Confirm Final Result",
       description:
-        `Final score: ${score[0]} – ${score[1]}. ` +
-        `Winner: ${names(winnerSide).join(" & ")}. ` +
-        "This result will be recorded in the tournament.",
+        `Final score: ${score[0]} – ${score[1]}. `,
       button: "Confirm Result",
     });
   }
