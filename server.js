@@ -22,8 +22,7 @@ const handle = app.getRequestHandler();
 const GROUPS = ["A", "B", "C"];
 const COURT_COUNT = 6;
 const GROUP_ROUNDS = 4;
-// const GROUP_DURATION_MS = 10 * 60 * 1000;
-const GROUP_DURATION_MS = 15 * 1000;
+const GROUP_DURATION_MS = 9 * 60 * 1000;
 const KNOCKOUT_TARGET = 10;
 const VERSION = 5;
 
