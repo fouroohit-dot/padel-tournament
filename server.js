@@ -232,7 +232,7 @@ const INITIAL_PLAYER_NAMES = {
       [["Yousuf S", "Ahmad J"], ["Elie S", "Elias B"]],
       [["Ted S", "Abdullah S"], ["Omar A", "Alessio R"]],
       [["Hazza Z", "Hamdan F"], ["Uzair R", "Khabib N"]],
-      [["Magomed G", "Rameez M"], ["Hamad R", "Izabel G"]],
+      [["Magomed G", "Rameez M"], ["Hamad R", "Filippo T"]],
       [["Bilal Z", "Negin M"], ["Syed M", "Vipul M"]],
     ],
   
@@ -251,7 +251,7 @@ const INITIAL_PLAYER_NAMES = {
       [["Khalfan B", "Gregory F"], ["Hadif S", "Anshul G"]],
       [["Salim S", "Khalid M"], ["Mujtaba D", "Rachid S"]],
       [["Omar Y", "Abdulla A"], ["Souleyman M", "Arman K"]],
-      [["Filippo T", "Mazen A"], ["Lily S", "Fai K"]],
+      [["Izabel G", "Mazen A"], ["Lily S", "Fai K"]],
     ],
   };
   
