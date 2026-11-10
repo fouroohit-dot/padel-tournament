@@ -216,6 +216,105 @@ function loadTournament() {
 
 let tournament = loadTournament();
 
+
+/* ==========================================
+   POWERFUL SUMMER DUBAI
+   AUTO-FILL STARTING PLAYER NAMES
+
+   Runs once when the server starts.
+   Preserves existing player IDs and courts.
+   Does not overwrite later coach edits.
+========================================== */
+
+const INITIAL_PLAYER_NAMES = {
+    A: [
+      [["Gael M", "Alexandre N"], ["Pablo C", "Mohamad M"]],
+      [["Yousuf S", "Ahmad J"], ["Elie S", "Elias B"]],
+      [["Ted S", "Abdullah S"], ["Omar A", "Alessio R"]],
+      [["Hazza Z", "Hamdan F"], ["Uzair R", "Khabib N"]],
+      [["Magomed G", "Rameez M"], ["Hamad R", "Izabel G"]],
+      [["Bilal Z", "Negin M"], ["Syed M", "Vipul M"]],
+    ],
+  
+    B: [
+      [["Rizwan K", "Michael O"], ["Winnie L", "Jennifer R"]],
+      [["Omar S", "Eliott B"], ["Essa S", "Cherif C"]],
+      [["Yasser N", "Sultan A"], ["Tariq S", "Hande E"]],
+      [["Jessica W", "Magomed M"], ["Yousuf A", "Hassan A"]],
+      [["Abdullah G", "Stephan B"], ["Issam H", "Hugo P"]],
+      [["Fahed G", "Thibault G"], ["Laura T", "Ahmed F"]],
+    ],
+  
+    C: [
+      [["Fahad A", "Marwan L"], ["Aidana S", "Meisoon L"]],
+      [["Tareq A", "Khalid S"], ["Yousef M", "Matar K"]],
+      [["Khalfan B", "Gregory F"], ["Hadif S", "Anshul G"]],
+      [["Salim S", "Khalid M"], ["Mujtaba D", "Rachid S"]],
+      [["Omar Y", "Abdulla A"], ["Souleyman M", "Arman K"]],
+      [["Filippo T", "Mazen A"], ["Lily S", "Fai K"]],
+    ],
+  };
+  
+  // Apply only once, before the tournament begins.
+  if (
+    tournament.phase === "setup" &&
+    !tournament.initialNamesLoaded
+  ) {
+    for (const group of ["A", "B", "C"]) {
+      const groupData = tournament.groups[group];
+  
+      const playersById = new Map(
+        groupData.players.map((player) => [
+          player.id,
+          player,
+        ])
+      );
+  
+      INITIAL_PLAYER_NAMES[group].forEach(
+        (courtTeams, courtIndex) => {
+          const court = groupData.courts.find(
+            (item) => item.id === courtIndex + 1
+          );
+  
+          if (!court) {
+            throw new Error(
+              `Missing Court ${courtIndex + 1} in Group ${group}`
+            );
+          }
+  
+          courtTeams.forEach((teamNames, teamIndex) => {
+            teamNames.forEach((name, playerIndex) => {
+              const playerId =
+                court.teams[teamIndex][playerIndex];
+  
+              const player = playersById.get(playerId);
+  
+              if (!player) {
+                throw new Error(
+                  `Player not found: ${playerId}`
+                );
+              }
+  
+              player.name = name;
+            });
+          });
+        }
+      );
+    }
+  
+    // Prevent the names from being reset
+    // when the server restarts.
+    tournament.initialNamesLoaded = true;
+  
+    // Save immediately.
+    persist();
+  
+    console.log(
+      "Starting roster loaded: 72 players across Groups A, B and C."
+    );
+  }
+  
+
 function persist() {
   fs.mkdirSync(path.dirname(STATE_FILE), {
     recursive: true,
