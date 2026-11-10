@@ -1,8 +1,6 @@
 
 "use client";
 
-import { useMemo, useState } from "react";
-
 import useTournament, {
   playerName,
 } from "@/lib/useTournament";
@@ -13,65 +11,60 @@ import {
 } from "@/app/components/TournamentBroadcast";
 
 /* ==========================================
-   STARTING TIMES
+   STARTING GROUP SCHEDULE
 ========================================== */
 
-const GROUP_SCHEDULE = {
+const GROUP_ORDER = ["A", "B", "C"];
+
+const GROUP_META = {
   A: {
-    time: "6:00 PM",
     label: "GROUP A",
+    time: "6:00 PM",
   },
   B: {
-    time: "6:10 PM",
     label: "GROUP B",
+    time: "6:10 PM",
   },
   C: {
-    time: "6:20 PM",
     label: "GROUP C",
+    time: "6:20 PM",
   },
 };
 
-const GROUPS = ["A", "B", "C"];
-
 /* ==========================================
    STARTING COURT CARD
-
-   Uses the existing spectator design,
-   but removes live scores and the timer.
 ========================================== */
 
 function StartingCourtCard({
   court,
   players,
-  startTime,
 }) {
   return (
-    <article className="nt-court starting-court-card">
-      <div className="nt-court-top">
-        <h3>
+    <article className="sc-court-card">
+      <div className="sc-court-header">
+        <h4>
           COURT {String(court.id).padStart(2, "0")}
-        </h3>
-
-        <span className="starting-court-time">
-          {startTime}
-        </span>
+        </h4>
       </div>
 
-      <div className="starting-court-content">
+      <div className="sc-court-body">
         {[0, 1].map((side) => (
           <div
-            className="starting-court-team"
+            className="sc-team"
             key={side}
           >
-            <span className="starting-team-label">
+            <span className="sc-team-label">
               TEAM {side + 1}
             </span>
 
-            <div className="starting-player-names">
+            <div className="sc-player-names">
               {(court.teams?.[side] || []).map(
                 (playerId, index) => (
                   <strong key={playerId || index}>
-                    {playerName(players, playerId)}
+                    {playerName(
+                      players,
+                      playerId
+                    )}
                   </strong>
                 )
               )}
@@ -84,28 +77,74 @@ function StartingCourtCard({
 }
 
 /* ==========================================
+   GROUP PANEL
+========================================== */
+
+function StartingGroupPanel({
+  groupKey,
+  courts,
+  players,
+}) {
+  const meta = GROUP_META[groupKey];
+
+  const sortedCourts = Array.isArray(courts)
+    ? [...courts].sort((a, b) => a.id - b.id)
+    : [];
+
+  return (
+    <section className="sc-group-panel">
+      {/* Group heading */}
+
+      <header className="sc-group-header">
+        <div className="sc-group-title">
+          <span className="sc-eyebrow">
+            STARTING COURT ASSIGNMENTS
+          </span>
+
+          <h3>{meta.label}</h3>
+        </div>
+
+        <div className="sc-group-time">
+          <span className="sc-eyebrow">
+            SCHEDULED START
+          </span>
+
+          <strong>{meta.time}</strong>
+        </div>
+      </header>
+
+      {/* Six starting courts */}
+
+      {sortedCourts.length > 0 ? (
+        <div className="sc-courts-grid">
+          {sortedCourts.map((court) => (
+            <StartingCourtCard
+              key={`${groupKey}-${court.id}`}
+              court={court}
+              players={players}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="sc-empty">
+          <h4>Assignments Unavailable</h4>
+
+          <p>
+            Group {groupKey} starting assignments
+            have not been loaded.
+          </p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+/* ==========================================
    MAIN PAGE
 ========================================== */
 
 export default function StartingCourtsPage() {
   const { state, connected } = useTournament();
-
-  const [selectedGroup, setSelectedGroup] =
-    useState("A");
-
-  const schedule = GROUP_SCHEDULE[selectedGroup];
-
-  const courts = useMemo(() => {
-    const saved = state?.startingCourts?.[selectedGroup];
-
-    if (!Array.isArray(saved)) {
-      return [];
-    }
-
-    return [...saved].sort(
-      (a, b) => a.id - b.id
-    );
-  }, [state?.startingCourts, selectedGroup]);
 
   if (!state) {
     return (
@@ -116,7 +155,7 @@ export default function StartingCourtsPage() {
           color: "#e4e2db",
           padding: 30,
           fontFamily:
-            '"Helvetica Neue LT Pro", Helvetica, Arial, sans-serif',
+            '"Helvetica Neue LT Pro", "Helvetica Neue", Helvetica, Arial, sans-serif',
         }}
       >
         Connecting to starting court assignments...
@@ -124,72 +163,19 @@ export default function StartingCourtsPage() {
     );
   }
 
+  const startingCourts =
+    state.startingCourts || {};
+
   return (
-    <main className="new-tourney">
+    <main className="new-tourney sc-page">
       <BroadcastStyles />
 
       <style>{`
         /* ==================================
-           PAGE HEADER
+           GLOBAL PAGE ALIGNMENT
         ================================== */
 
-        .starting-page .starting-header-label {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-end;
-          gap: 7px;
-          text-align: right;
-        }
-
-        .starting-page .starting-header-label small {
-          color: #D5DCDC;
-          font-size: 10px;
-          font-weight: 500;
-          letter-spacing: .05em;
-        }
-
-        .starting-page .starting-header-label strong {
-          color: #e2cfa5;
-          font-size: clamp(18px, 2vw, 28px);
-          font-weight: 500;
-          letter-spacing: .05em;
-        }
-
-        /* ==================================
-           GROUP NAVIGATION
-        ================================== */
-
-        .starting-page .starting-group-tabs {
-          display: grid;
-          grid-template-columns:
-            repeat(3, minmax(0, 1fr));
-
-          gap: 12px;
-          margin: 23px 0 20px;
-        }
-
-        .starting-page .starting-group-tab {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-
-          gap: 12px;
-          min-width: 0;
-          min-height: 80px;
-
-          padding: 17px 21px;
-
-          border: 1px solid
-            rgba(213,220,220,.32);
-
-          border-top: 2px solid
-            rgba(213,220,220,.32);
-
-          border-radius: 3px;
-
-          background: rgba(213,220,220,.08);
-          color: #e4e2db;
-
+        .sc-page {
           font-family:
             "Helvetica Neue LT Pro",
             "Helvetica Neue",
@@ -197,146 +183,400 @@ export default function StartingCourtsPage() {
             Arial,
             sans-serif;
 
-          text-align: left;
-          cursor: pointer;
-          transition:
-            background .2s ease,
-            border-color .2s ease;
+          font-weight: 300;
+          letter-spacing: 0;
         }
 
-        .starting-page .starting-group-tab:hover {
-          background: rgba(213,220,220,.14);
-        }
+        .sc-page .nt-container {
+          max-width: 1900px;
 
-        .starting-page .starting-group-tab.selected {
-          background: rgba(212,183,120,.15);
-          border-color: #d4b778;
-          border-top-color: #d4b778;
-        }
-
-        .starting-page .starting-group-tab span {
-          font-size: clamp(20px,2vw,30px);
-          font-weight: 500;
-          line-height: 1.1;
-        }
-
-        .starting-page .starting-group-tab strong {
-          color: #e2cfa5;
-          font-size: clamp(18px,1.8vw,26px);
-          font-weight: 500;
-          white-space: nowrap;
+          padding:
+            18px
+            clamp(22px, 2.8vw, 55px)
+            35px;
         }
 
         /* ==================================
-           SCHEDULE HEADING
+           TOP BROADCAST HEADER
         ================================== */
 
-        .starting-page .starting-schedule {
+        .sc-page .sc-header-meta {
           display: flex;
           align-items: center;
-          justify-content: space-between;
-          flex-wrap: wrap;
-
-          gap: 16px;
-          margin: 23px 0;
-          padding: 18px 23px;
-
-          border-left: 3px solid #d4b778;
-
-          background: linear-gradient(
-            120deg,
-            rgba(212,183,120,.13),
-            rgba(85,114,114,.12)
-          );
+          justify-content: flex-end;
+          gap: 22px;
+          flex-shrink: 0;
         }
 
-        .starting-page .starting-schedule small {
-          display: block;
-          color: #D5DCDC;
-          font-size: 11px;
-          font-weight: 500;
-          letter-spacing: .05em;
-          margin-bottom: 8px;
-        }
-
-        .starting-page .starting-schedule h2 {
-          margin: 0;
-
-          color: #e4e2db;
-          font-size: clamp(30px,3vw,49px);
-          font-weight: 500;
-          line-height: 1.1;
-        }
-
-        .starting-page .starting-schedule-time {
+        .sc-page .sc-header-schedule {
           display: flex;
           flex-direction: column;
           align-items: flex-end;
           gap: 5px;
+          text-align: right;
         }
 
-        .starting-page .starting-schedule-time strong {
-          color: #e2cfa5;
-          font-size: clamp(30px,3.3vw,50px);
-          font-weight: 500;
-          line-height: 1;
-          white-space: nowrap;
-
-          font-variant-numeric: tabular-nums;
-        }
-
-        /* ==================================
-           COURT CARDS
-        ================================== */
-
-        .starting-page .starting-court-time {
-          color: #e2cfa5;
-          border: 1px solid
-            rgba(212,183,120,.48);
-          padding: 7px 11px;
-          font-size: 14px;
-          font-weight: 500;
-          white-space: nowrap;
-        }
-
-        .starting-page .starting-court-content {
-          padding: 0 17px;
-        }
-
-        .starting-page .starting-court-team {
-          min-height: 128px;
-
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-
-          padding: 18px 0;
-        }
-
-        .starting-page .starting-court-team
-        + .starting-court-team {
-          border-top: 1px solid
-            rgba(213,220,220,.25);
-        }
-
-        .starting-page .starting-team-label {
-          display: block;
-          margin-bottom: 12px;
-
+        .sc-page .sc-header-schedule small {
           color: #D5DCDC;
 
           font-size: 11px;
           font-weight: 500;
-          letter-spacing: .05em;
+          letter-spacing: 0.05em;
         }
 
-        .starting-page .starting-player-names {
+        .sc-page .sc-header-schedule strong {
+          color: #e2cfa5;
+
+          font-size: clamp(
+            24px,
+            2.2vw,
+            37px
+          );
+
+          font-weight: 500;
+          line-height: 1;
+          letter-spacing: 0;
+
+          white-space: nowrap;
+          font-variant-numeric: tabular-nums;
+        }
+
+        /* ==================================
+           PAGE TITLE
+
+           Matches the main spectator page:
+           .nt-section-head h2
+        ================================== */
+
+        .sc-page .nt-section-head {
+          margin: 26px 0 30px;
+          align-items: center;
+          gap: 24px;
+        }
+
+        .sc-page .nt-section-head h2 {
+          margin: 0;
+
+          font-family:
+            "Helvetica Neue LT Pro",
+            "Helvetica Neue",
+            Helvetica,
+            Arial,
+            sans-serif;
+
+          font-size: clamp(
+            30px,
+            3vw,
+            50px
+          );
+
+          font-weight: 500;
+          line-height: 1.1;
+          letter-spacing: 0;
+
+          color: #e4e2db;
+        }
+
+        /* ==================================
+           THREE-GROUP LAYOUT
+
+           Each group receives exactly
+           one-third of available width.
+        ================================== */
+
+        .sc-page .sc-groups-grid {
+          display: grid;
+
+          grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+
+          align-items: stretch;
+
+          gap: clamp(
+            14px,
+            1.3vw,
+            25px
+          );
+
+          width: 100%;
+          margin-top: 5px;
+        }
+
+        /* ==================================
+           GROUP PANELS
+        ================================== */
+
+        .sc-page .sc-group-panel {
           display: flex;
           flex-direction: column;
-          gap: 6px;
+
+          min-width: 0;
+          height: 100%;
+
+          border: 1px solid
+            rgba(213, 220, 220, 0.35);
+
+          border-top: 2px solid
+            rgba(212, 183, 120, 0.48);
+
+          border-radius: 4px;
+
+          background: linear-gradient(
+            155deg,
+            rgba(85, 114, 114, 0.34),
+            rgba(57, 89, 88, 0.55)
+          );
+
+          overflow: hidden;
         }
 
-        .starting-page .starting-player-names strong {
+        /* ==================================
+           GROUP HEADER
+
+           Fixed layout ensures the
+           scheduled time does not push
+           or compress the group name.
+        ================================== */
+
+        .sc-page .sc-group-header {
+          display: grid;
+
+          grid-template-columns:
+            minmax(0, 1fr) auto;
+
+          align-items: end;
+
+          gap: 12px;
+
+          padding:
+            clamp(16px, 1.5vw, 25px)
+            clamp(15px, 1.4vw, 24px);
+
+          min-height: 110px;
+
+          border-bottom: 1px solid
+            rgba(213, 220, 220, 0.24);
+        }
+
+        .sc-page .sc-group-title {
+          min-width: 0;
+        }
+
+        .sc-page .sc-eyebrow {
+          display: block;
+
+          color: #D5DCDC;
+
+          font-size: clamp(
+            9px,
+            0.65vw,
+            11px
+          );
+
+          font-weight: 500;
+          line-height: 1.3;
+          letter-spacing: 0.05em;
+
+          white-space: nowrap;
+
+          margin-bottom: 10px;
+        }
+
+        .sc-page .sc-group-title h3 {
+          margin: 0;
+
+          font-family:
+            "Helvetica Neue LT Pro",
+            "Helvetica Neue",
+            Helvetica,
+            Arial,
+            sans-serif;
+
+          color: #e4e2db;
+
+          font-size: clamp(
+            27px,
+            2.1vw,
+            43px
+          );
+
+          font-weight: 500;
+          line-height: 1;
+          letter-spacing: 0.02em;
+
+          white-space: nowrap;
+        }
+
+        .sc-page .sc-group-time {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          justify-content: flex-end;
+
+          min-width: 0;
+
+          text-align: right;
+        }
+
+        .sc-page .sc-group-time strong {
+          display: block;
+
+          color: #e2cfa5;
+
+          font-size: clamp(
+            26px,
+            2.1vw,
+            43px
+          );
+
+          font-weight: 500;
+          line-height: 1;
+          letter-spacing: 0;
+
+          white-space: nowrap;
+          font-variant-numeric: tabular-nums;
+        }
+
+        /* ==================================
+           COURT GRID
+
+           Identical layout for A, B, C.
+           Three rows, two columns.
+        ================================== */
+
+        .sc-page .sc-courts-grid {
+          display: grid;
+
+          grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+          grid-template-rows:
+            repeat(3, minmax(0, 1fr));
+
+          gap: 8px;
+
+          flex: 1;
+
+          padding: 10px;
+
+          min-width: 0;
+        }
+
+        /* ==================================
+           INDIVIDUAL COURT
+        ================================== */
+
+        .sc-page .sc-court-card {
+          display: flex;
+          flex-direction: column;
+
+          min-width: 0;
+          min-height: 0;
+
+          border: 1px solid
+            rgba(213, 220, 220, 0.29);
+
+          border-radius: 3px;
+
+          background: linear-gradient(
+            155deg,
+            rgba(68, 100, 99, 0.44),
+            rgba(57, 89, 88, 0.42)
+          );
+
+          overflow: hidden;
+        }
+
+        .sc-page .sc-court-header {
+          display: flex;
+          align-items: center;
+
+          min-height: 47px;
+
+          padding: 10px 14px;
+
+          border-bottom: 1px solid
+            rgba(213, 220, 220, 0.22);
+
+        }
+
+        .sc-page .sc-court-header h4 {
+          margin: 0;
+
+
+          font-size: clamp(
+            19px,
+            1.35vw,
+            27px
+          );
+
+          font-weight: 500;
+          line-height: 1.1;
+          letter-spacing: 0.02em;
+
+          white-space: nowrap;
+
+          color: var(--gold);
+        }
+
+        /* ==================================
+           TEAM SECTIONS
+
+           Both teams receive the same
+           minimum height and spacing.
+        ================================== */
+
+        .sc-page .sc-court-body {
+          display: grid;
+
+          grid-template-rows:
+            repeat(2, minmax(0, 1fr));
+
+          flex: 1;
+
+          padding: 0 14px;
+        }
+
+        .sc-page .sc-team {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+
+          min-width: 0;
+          min-height: 105px;
+
+          padding: 13px 0;
+        }
+
+        .sc-page .sc-team + .sc-team {
+          border-top: 1px solid
+            rgba(213, 220, 220, 0.23);
+        }
+
+        .sc-page .sc-team-label {
+          display: block;
+
+          color: #D5DCDC;
+
+          font-size: 10px;
+          font-weight: 500;
+          line-height: 1.2;
+          letter-spacing: 0.05em;
+
+          margin-bottom: 9px;
+        }
+
+        .sc-page .sc-player-names {
+          display: flex;
+          flex-direction: column;
+
+          gap: 4px;
+          min-width: 0;
+        }
+
+        .sc-page .sc-player-names strong {
+          display: block;
+
           color: #e4e2db;
 
           font-family:
@@ -346,29 +586,173 @@ export default function StartingCourtsPage() {
             Arial,
             sans-serif;
 
-          font-size: clamp(24px,2.15vw,36px);
+          font-size: clamp(
+            19px,
+            1.45vw,
+            30px
+          );
+
           font-weight: 700;
-          line-height: 1.15;
+          line-height: 1.12;
+          letter-spacing: 0;
 
           overflow-wrap: anywhere;
         }
 
         /* ==================================
-           TABLET
+           EMPTY ASSIGNMENTS
         ================================== */
 
-        @media (max-width:1100px) {
-          .starting-page .starting-group-tab {
-            padding: 15px;
-            min-height: 70px;
+        .sc-page .sc-empty {
+          padding: 38px 20px;
+          text-align: center;
+        }
+
+        .sc-page .sc-empty h4 {
+          margin: 0 0 12px;
+
+          font-size: 19px;
+          font-weight: 500;
+        }
+
+        .sc-page .sc-empty p {
+          margin: 0;
+          color: #D5DCDC;
+          line-height: 1.5;
+        }
+
+        /* ==================================
+           LARGE SPECTATOR SCREENS
+        ================================== */
+
+        @media (min-width: 1800px) {
+          .sc-page .sc-groups-grid {
+            gap: 24px;
           }
 
-          .starting-page .starting-group-tab span {
-            font-size: 21px;
+          .sc-page .sc-courts-grid {
+            gap: 11px;
+            padding: 12px;
           }
 
-          .starting-page .starting-group-tab strong {
-            font-size: 17px;
+          .sc-page .sc-group-header {
+            padding: 25px;
+          }
+
+          .sc-page .sc-team {
+            min-height: 118px;
+          }
+
+          .sc-page .sc-court-header {
+            padding: 13px 16px;
+          }
+
+          .sc-page .sc-court-body {
+            padding: 0 16px;
+          }
+        }
+
+        /* ==================================
+           MEDIUM SCREENS
+
+           Keep three group columns.
+        ================================== */
+
+        @media (
+          min-width: 1101px
+        ) and (
+          max-width: 1450px
+        ) {
+          .sc-page .sc-groups-grid {
+            gap: 12px;
+          }
+
+          .sc-page .sc-group-header {
+            padding: 15px 13px;
+            gap: 8px;
+          }
+
+          .sc-page .sc-eyebrow {
+            font-size: 9px;
+          }
+
+          .sc-page .sc-group-title h3 {
+            font-size: clamp(
+              25px,
+              2vw,
+              32px
+            );
+          }
+
+          .sc-page .sc-group-time strong {
+            font-size: clamp(
+              24px,
+              2vw,
+              32px
+            );
+          }
+
+          .sc-page .sc-courts-grid {
+            gap: 6px;
+            padding: 7px;
+          }
+
+          .sc-page .sc-court-header {
+            padding: 9px 11px;
+          }
+
+          .sc-page .sc-court-header h4 {
+            font-size: 19px;
+          }
+
+          .sc-page .sc-court-body {
+            padding: 0 11px;
+          }
+
+          .sc-page .sc-player-names strong {
+            font-size: clamp(
+              17px,
+              1.35vw,
+              20px
+            );
+          }
+        }
+
+        /* ==================================
+           TABLET
+
+           Stack group panels to preserve
+           readable player names.
+        ================================== */
+
+        @media (max-width: 1100px) {
+          .sc-page .sc-groups-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+          }
+
+          .sc-page .sc-group-header {
+            min-height: 100px;
+          }
+
+          .sc-page .sc-group-title h3 {
+            font-size: 36px;
+          }
+
+          .sc-page .sc-group-time strong {
+            font-size: 36px;
+          }
+
+          .sc-page .sc-player-names strong {
+            font-size: clamp(
+              23px,
+              3vw,
+              30px
+            );
+          }
+
+          .sc-page .sc-team {
+            min-height: 100px;
           }
         }
 
@@ -376,47 +760,99 @@ export default function StartingCourtsPage() {
            MOBILE
         ================================== */
 
-        @media (max-width:700px) {
-          .starting-page .starting-group-tabs {
-            grid-template-columns: 1fr;
-            gap: 8px;
+        @media (max-width: 700px) {
+          .sc-page .nt-container {
+            padding: 14px 13px 30px;
           }
 
-          .starting-page .starting-group-tab {
-            min-height: 56px;
+          .sc-page .sc-header-meta {
+            width: 100%;
+            flex-wrap: wrap;
+            justify-content: space-between;
           }
 
-          .starting-page .starting-schedule {
-            padding: 16px;
-          }
-
-          .starting-page .starting-schedule-time {
+          .sc-page .sc-header-schedule {
             align-items: flex-start;
+            text-align: left;
           }
 
-          .starting-page .starting-player-names strong {
-            font-size: clamp(25px,6vw,34px);
+          .sc-page .nt-section-head {
+            margin: 25px 0;
           }
 
-          .starting-page .starting-court-team {
-            min-height: 108px;
+          .sc-page .sc-group-header {
+            min-height: 0;
+            padding: 18px 15px;
           }
 
-          .starting-page .starting-court-time {
-            font-size: 12px;
+          .sc-page .sc-group-title h3 {
+            font-size: 27px;
+          }
+
+          .sc-page .sc-group-time strong {
+            font-size: 27px;
+          }
+
+          .sc-page .sc-eyebrow {
+            font-size: 9px;
+          }
+
+          .sc-page .sc-courts-grid {
+            grid-template-columns: 1fr;
+            grid-template-rows: auto;
+
+            gap: 9px;
+            padding: 9px;
+          }
+
+          .sc-page .sc-court-header h4 {
+            font-size: 24px;
+          }
+
+          .sc-page .sc-court-body {
+            padding: 0 15px;
+          }
+
+          .sc-page .sc-team {
+            min-height: 95px;
+          }
+
+          .sc-page .sc-player-names strong {
+            font-size: clamp(
+              24px,
+              6vw,
+              31px
+            );
           }
         }
 
-        @media (prefers-reduced-motion: reduce) {
-          .starting-page .starting-group-tab {
-            transition: none;
+        /* ==================================
+           SMALL MOBILE SCREENS
+        ================================== */
+
+        @media (max-width: 390px) {
+          .sc-page .sc-group-header {
+            gap: 8px;
+          }
+
+          .sc-page .sc-group-title h3 {
+            font-size: 24px;
+          }
+
+          .sc-page .sc-group-time strong {
+            font-size: 24px;
+          }
+
+          .sc-page .sc-eyebrow {
+            font-size: 8px;
           }
         }
       `}</style>
 
-      <div className="nt-container starting-page">
+      <div className="nt-container">
+
         {/* ==================================
-            BROADCAST HEADER
+            AP BRAND HEADER
         ================================== */}
 
         <header className="nt-header">
@@ -431,7 +867,7 @@ export default function StartingCourtsPage() {
             </div>
           </div>
 
-          <div className="nt-header-info">
+          <div className="sc-header-meta">
             <div className="nt-connection">
               <span
                 className={`nt-dot ${
@@ -444,101 +880,49 @@ export default function StartingCourtsPage() {
                 : "RECONNECTING"}
             </div>
 
-            <div className="starting-header-label">
-              <small>STARTING SCHEDULE</small>
-              <strong>6:00 PM — 6:20 PM</strong>
+            <div className="sc-header-schedule">
+              <small>
+                STARTING SCHEDULE
+              </small>
+
+              <strong>
+                6:00 PM — 6:20 PM
+              </strong>
             </div>
           </div>
         </header>
 
         {/* ==================================
-            TITLE AND PARTNERS
+            STARTING COURTS HEADING
         ================================== */}
 
         <section className="nt-section-head">
           <div>
             <h2>Starting Courts</h2>
-
           </div>
 
           <Partners />
         </section>
 
         {/* ==================================
-            GROUP NAVIGATION
+            ALL THREE GROUPS
         ================================== */}
 
-        <nav
-          className="starting-group-tabs"
-          aria-label="Select starting group"
+        <section
+          className="sc-groups-grid"
+          aria-label="Starting court assignments for all groups"
         >
-          {GROUPS.map((group) => (
-            <button
-              key={group}
-              type="button"
-              className={`starting-group-tab ${
-                selectedGroup === group
-                  ? "selected"
-                  : ""
-              }`}
-              onClick={() => setSelectedGroup(group)}
-              aria-pressed={selectedGroup === group}
-            >
-              <span>GROUP {group}</span>
-
-              <strong>
-                {GROUP_SCHEDULE[group].time}
-              </strong>
-            </button>
+          {GROUP_ORDER.map((groupKey) => (
+            <StartingGroupPanel
+              key={groupKey}
+              groupKey={groupKey}
+              courts={
+                startingCourts[groupKey]
+              }
+              players={state.players}
+            />
           ))}
-        </nav>
-
-        {/* ==================================
-            SELECTED GROUP START TIME
-        ================================== */}
-
-        <section className="starting-schedule">
-          <div>
-            <small>STARTING COURT ASSIGNMENTS</small>
-
-            <h2>{schedule.label}</h2>
-          </div>
-
-          <div className="starting-schedule-time">
-            <small>SCHEDULED START</small>
-            <strong>{schedule.time}</strong>
-          </div>
         </section>
-
-        {/* ==================================
-            SIX COURT ASSIGNMENTS
-        ================================== */}
-
-        {courts.length > 0 ? (
-          <section
-            className="nt-courts-grid"
-            aria-label={`Group ${selectedGroup} starting courts`}
-          >
-            {courts.map((court) => (
-              <StartingCourtCard
-                key={`${selectedGroup}-${court.id}`}
-                court={court}
-                players={state.players}
-                startTime={schedule.time}
-              />
-            ))}
-          </section>
-        ) : (
-          <section className="nt-empty">
-            <h2>STARTING ASSIGNMENTS UNAVAILABLE</h2>
-
-            <p>
-              The original Group {selectedGroup}
-              assignments could not be recovered
-              from the saved tournament state.
-            </p>
-          </section>
-        )}
       </div>
     </main>
   );

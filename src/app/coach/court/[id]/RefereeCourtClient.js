@@ -1,7 +1,12 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+
 import { useParams } from "next/navigation";
 
 import useTournament, {
@@ -16,6 +21,10 @@ import useTournament, {
 import {
   DigitalClock,
 } from "@/app/components/TournamentBroadcast";
+
+/* ==========================================
+   EXISTING AP REFEREE STYLING
+========================================== */
 
 const styles = `
   .ar-referee {
@@ -34,26 +43,36 @@ const styles = `
       Helvetica,Arial,sans-serif;
     font-weight:300;
   }
+
   .ar-referee *,
   .ar-referee *::before,
-  .ar-referee *::after { box-sizing:border-box; }
+  .ar-referee *::after {
+    box-sizing:border-box;
+  }
+
   .ar-referee button,
-  .ar-referee input { font:inherit; }
+  .ar-referee input {
+    font:inherit;
+  }
+
   .ar-referee button {
     cursor:pointer;
     -webkit-tap-highlight-color:transparent;
     touch-action:manipulation;
   }
+
   .ar-referee button:disabled {
     opacity:.43;
     cursor:not-allowed;
   }
+
   .ar-wrap {
     width:100%;
     max-width:1100px;
     margin:auto;
     padding:16px clamp(12px,2.5vw,30px) 36px;
   }
+
   .ar-header {
     display:flex;
     align-items:center;
@@ -62,16 +81,21 @@ const styles = `
     padding-bottom:16px;
     border-bottom:1px solid rgba(212,183,120,.45);
   }
+
   .ar-brand {
     display:flex;
     align-items:center;
     gap:10px;
     min-width:0;
   }
+
   .ar-brand img {
-    width:37px;height:49px;
-    flex-shrink:0;object-fit:contain;
+    width:37px;
+    height:49px;
+    flex-shrink:0;
+    object-fit:contain;
   }
+
   .ar-brand h1 {
     margin:0;
     font-size:clamp(16px,3.2vw,24px);
@@ -79,6 +103,7 @@ const styles = `
     line-height:1.12;
     letter-spacing:.05em;
   }
+
   .ar-brand span {
     display:block;
     color:#e2cfa5;
@@ -87,6 +112,7 @@ const styles = `
     letter-spacing:.05em;
     margin-top:4px;
   }
+
   .ar-status {
     display:flex;
     align-items:center;
@@ -95,11 +121,14 @@ const styles = `
     letter-spacing:.05em;
     white-space:nowrap;
   }
+
   .ar-status i {
-    width:7px;height:7px;
+    width:7px;
+    height:7px;
     border-radius:50%;
     background:#d5dcdc;
   }
+
   .ar-meta {
     display:flex;
     align-items:center;
@@ -107,12 +136,14 @@ const styles = `
     gap:15px;
     margin:19px 0;
   }
+
   .ar-meta h2 {
     margin:0;
     font-size:clamp(30px,6vw,48px);
     font-weight:500;
     line-height:1;
   }
+
   .ar-meta p {
     margin:7px 0 0;
     font-family:"JHA Times Now",Georgia,serif;
@@ -120,6 +151,7 @@ const styles = `
     font-size:14px;
     color:#e2cfa5;
   }
+
   .ar-meta .nt-clock {
     display:flex;
     flex-direction:column;
@@ -134,11 +166,13 @@ const styles = `
     border:1px solid rgba(212,183,120,.45);
     border-radius:3px;
   }
+
   .ar-meta .nt-clock > span {
     font-size:9px;
     font-weight:500;
     letter-spacing:.05em;
   }
+
   .ar-meta .nt-clock strong {
     color:#e2cfa5;
     font-size:38px;
@@ -147,6 +181,7 @@ const styles = `
     font-variant-numeric:tabular-nums;
     font-feature-settings:"tnum" 1;
   }
+
   .ar-meta .nt-clock em {
     color:#e4e2db;
     font-family:"JHA Times Now",Georgia,serif;
@@ -154,6 +189,7 @@ const styles = `
     font-style:italic;
     white-space:nowrap;
   }
+
   .ar-note {
     padding:13px 16px;
     border-left:3px solid #d4b778;
@@ -162,16 +198,19 @@ const styles = `
     line-height:1.5;
     font-size:14px;
   }
+
   .ar-error {
     border-left-color:#ffad9c;
     background:rgba(120,40,35,.14);
     color:#ffe4df;
   }
+
   .ar-grid {
     display:grid;
     grid-template-columns:repeat(2,minmax(0,1fr));
     gap:15px;
   }
+
   .ar-team {
     display:flex;
     flex-direction:column;
@@ -183,18 +222,21 @@ const styles = `
     border:1px solid rgba(213,220,220,.32);
     border-top:2px solid rgba(212,183,120,.5);
   }
+
   .ar-team.winner {
     border-top-color:#d4b778;
     background:linear-gradient(
       150deg,rgba(212,183,120,.14),#446463 62%,#395958
     );
   }
+
   .ar-team-label {
     font-size:11px;
     font-weight:500;
     letter-spacing:.05em;
     color:#d5dcdc;
   }
+
   .ar-team-names {
     display:flex;
     flex-direction:column;
@@ -203,12 +245,14 @@ const styles = `
     margin-top:15px;
     gap:4px;
   }
+
   .ar-team-names strong {
     font-size:clamp(25px,3.4vw,43px);
     line-height:1.12;
     font-weight:700;
     overflow-wrap:anywhere;
   }
+
   .ar-score {
     display:block;
     margin:12px 0 19px;
@@ -219,6 +263,7 @@ const styles = `
     text-align:center;
     font-variant-numeric:tabular-nums;
   }
+
   .ar-btn {
     width:100%;
     min-height:56px;
@@ -230,26 +275,31 @@ const styles = `
     font-size:18px !important;
     font-weight:500 !important;
   }
+
   .ar-btn.secondary {
     color:#e4e2db;
     background:rgba(213,220,220,.09);
     border-color:rgba(213,220,220,.4);
   }
+
   .ar-btn.danger {
     background:rgba(120,55,50,.28);
     border-color:#c99488;
     color:#ffe4df;
   }
+
   .ar-controls {
     display:grid;
     grid-template-columns:1fr 1fr;
     gap:13px;
     margin-top:17px;
   }
+
   .ar-controls .ar-btn {
     min-height:61px;
     font-size:16px !important;
   }
+
   .ar-login {
     width:min(100%,460px);
     margin:35px auto 0;
@@ -257,10 +307,12 @@ const styles = `
     border:1px solid rgba(213,220,220,.3);
     background:#395958;
   }
+
   .ar-login h2 {
     font-size:27px;
     font-weight:500;
   }
+
   .ar-input {
     display:block;
     width:100%;
@@ -272,6 +324,7 @@ const styles = `
     border:1px solid #809595;
     font-size:17px;
   }
+
   .ar-overlay {
     position:fixed;
     z-index:9999;
@@ -283,6 +336,7 @@ const styles = `
     background:rgba(12,31,30,.84);
     backdrop-filter:blur(5px);
   }
+
   .ar-dialog {
     width:min(100%,460px);
     padding:23px;
@@ -290,70 +344,113 @@ const styles = `
     border:1px solid #d4b778;
     box-shadow:0 20px 65px rgba(0,0,0,.36);
   }
+
   .ar-dialog h2 {
     margin:0 0 13px;
     font-size:26px;
     font-weight:500;
   }
+
   .ar-dialog p {
     line-height:1.55;
     margin-bottom:20px;
   }
+
   .ar-dialog .ar-actions {
     display:flex;
     gap:10px;
   }
+
   .ar-dialog .ar-btn {
     flex:1;
     font-size:14px !important;
   }
+
   @media(max-width:700px) {
-    .ar-wrap { padding:12px 12px 24px; }
-    .ar-header { align-items:flex-start; }
-    .ar-meta h2 { font-size:35px; }
+    .ar-wrap {
+      padding:12px 12px 24px;
+    }
+
+    .ar-header {
+      align-items:flex-start;
+    }
+
+    .ar-meta h2 {
+      font-size:35px;
+    }
+
     .ar-grid {
       grid-template-columns:1fr;
       gap:12px;
     }
-    .ar-team { padding:15px 17px; }
+
+    .ar-team {
+      padding:15px 17px;
+    }
+
     .ar-team-names {
       min-height:0;
       margin-top:8px;
       gap:3px;
     }
+
     .ar-team-names strong {
       font-size:clamp(25px,6vw,35px);
     }
+
     .ar-score {
       font-size:80px;
       margin:7px 0 13px;
     }
+
     .ar-btn {
       min-height:64px;
       font-size:21px !important;
     }
+
     .ar-controls {
       grid-template-columns:1fr;
       gap:10px;
     }
+
     .ar-meta .nt-clock {
       width:148px;
       min-width:148px;
       height:80px;
     }
-    .ar-meta .nt-clock strong { font-size:34px; }
+
+    .ar-meta .nt-clock strong {
+      font-size:34px;
+    }
   }
+
   @media(max-width:375px) {
-    .ar-brand h1 { font-size:15px; }
-    .ar-meta { align-items:flex-start; }
+    .ar-brand h1 {
+      font-size:15px;
+    }
+
+    .ar-meta {
+      align-items:flex-start;
+    }
+
     .ar-meta .nt-clock {
       width:133px;
       min-width:133px;
     }
-    .ar-meta .nt-clock strong { font-size:30px; }
-    .ar-team-names strong { font-size:25px; }
+
+    .ar-meta .nt-clock strong {
+      font-size:30px;
+    }
+
+    .ar-team-names strong {
+      font-size:25px;
+    }
   }
 `;
+
+/* ==========================================
+   CONFIRMATION DIALOG
+========================================== */
 
 function ConfirmationDialog({
   dialog,
@@ -383,6 +480,7 @@ function ConfirmationDialog({
 
         <div className="ar-actions">
           <button
+            type="button"
             className="ar-btn secondary"
             disabled={busy}
             onClick={onCancel}
@@ -391,6 +489,7 @@ function ConfirmationDialog({
           </button>
 
           <button
+            type="button"
             className="ar-btn"
             disabled={busy}
             onClick={onConfirm}
@@ -403,6 +502,10 @@ function ConfirmationDialog({
   );
 }
 
+/* ==========================================
+   REFEREE COURT CLIENT
+========================================== */
+
 export default function RefereeCourtClient() {
   const params = useParams();
   const courtId = Number(params?.id);
@@ -411,17 +514,77 @@ export default function RefereeCourtClient() {
 
   const [token, setToken] = useState("");
   const [password, setPassword] = useState("");
+
   const [busy, setBusy] = useState(false);
+
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [dialog, setDialog] = useState(null);
+
+  // Immediately displayed local score while the
+  // authoritative server update is in progress.
+  const [optimisticScore, setOptimisticScore] =
+    useState(null);
+
+  // Synchronous guard against rapid double taps.
+  // Unlike React state, refs update immediately.
+  const pendingRef = useRef(false);
+
+  /* ========================================
+     RESTORE SESSION
+  ======================================== */
 
   useEffect(() => {
     setToken(getCoachToken());
   }, []);
 
+  /* ========================================
+     CLEAR OLD OPTIMISTIC SCORE
+     AFTER MATCH TRANSITIONS
+  ======================================== */
+
+  useEffect(() => {
+    if (!optimisticScore || !state) {
+      return;
+    }
+
+    // A new match/round has started.
+    // Never carry a local score into it.
+    if (
+      optimisticScore.matchKey !== state.matchKey ||
+      optimisticScore.courtId !== courtId
+    ) {
+      setOptimisticScore(null);
+    }
+  }, [
+    state?.matchKey,
+    courtId,
+    optimisticScore,
+  ]);
+
+  /* ========================================
+     SHARED ACTION HANDLER
+
+     Used for:
+     - Undo
+     - Confirm result
+     - Reopen result
+
+     Score additions have their own optimized
+     handler below.
+  ======================================== */
+
   async function action(event, payload = {}) {
-    if (busy || !state) return false;
+    if (
+      pendingRef.current ||
+      busy ||
+      !state ||
+      !connected
+    ) {
+      return false;
+    }
+
+    pendingRef.current = true;
 
     setBusy(true);
     setError("");
@@ -435,42 +598,205 @@ export default function RefereeCourtClient() {
       });
 
       return true;
-    } catch (error) {
-      setError(error.message);
+    } catch (err) {
+      setError(
+        err.message || "Unable to update match."
+      );
 
-      if (/unauthorized/i.test(error.message)) {
+      if (
+        /unauthorized/i.test(err.message || "")
+      ) {
         clearCoachToken();
         setToken("");
       }
 
       return false;
     } finally {
+      pendingRef.current = false;
       setBusy(false);
     }
   }
 
+  /* ========================================
+     OPTIMISTIC POINT SCORING
+
+     1. Referee taps +1
+     2. Local score updates immediately
+     3. Socket event is sent to Railway
+     4. Server validates and persists
+     5. Server broadcasts authoritative score
+     6. Local optimistic value is released
+
+     Only one scoring request can be pending
+     from this referee device at any time.
+  ======================================== */
+
+  async function addPoint(team) {
+    if (
+      pendingRef.current ||
+      busy ||
+      !state ||
+      !connected ||
+      !token
+    ) {
+      return;
+    }
+
+    const currentCourt = state.courts.find(
+      (court) => court.id === courtId
+    );
+
+    if (
+      !currentCourt ||
+      !currentCourt.active ||
+      currentCourt.final ||
+      ![0, 1].includes(team)
+    ) {
+      return;
+    }
+
+    const isKnockout =
+      state.stage !== "groups";
+
+    if (
+      state.phase !== "live" ||
+      (!isKnockout && !state.timerStarted)
+    ) {
+      return;
+    }
+
+    const currentPoints = [
+      ...(currentCourt.score?.points || [0, 0]),
+    ];
+
+    // Knockout matches end at exactly 10.
+    if (
+      isKnockout &&
+      currentPoints.some((value) => value >= 10)
+    ) {
+      return;
+    }
+
+    // Lock before updating React state.
+    // Prevents two rapid clicks submitting twice.
+    pendingRef.current = true;
+
+    const currentMatchKey = state.matchKey;
+
+    const nextPoints = [...currentPoints];
+    nextPoints[team] += 1;
+
+    // The score displayed on this device changes
+    // immediately, before the network round trip.
+    setOptimisticScore({
+      matchKey: currentMatchKey,
+      courtId,
+      points: nextPoints,
+    });
+
+    setBusy(true);
+    setError("");
+    setNotice("");
+
+    const startedAt = performance.now();
+
+    try {
+      await sendTournamentEvent(
+        "score:point",
+        {
+          courtId,
+          matchKey: currentMatchKey,
+          team,
+        }
+      );
+
+      const elapsed =
+        performance.now() - startedAt;
+
+      // Only log noticeably slow acknowledgments.
+      if (elapsed > 300) {
+        console.warn(
+          `[Court ${courtId}] Score acknowledgement: ` +
+          `${elapsed.toFixed(0)}ms`
+        );
+      }
+    } catch (err) {
+      const message =
+        err.message ||
+        "Unable to add point.";
+
+      setError(message);
+
+      if (/unauthorized/i.test(message)) {
+        clearCoachToken();
+        setToken("");
+      }
+
+      // An acknowledgment timeout does not
+      // necessarily mean the point was rejected.
+      // The server may have saved it before the
+      // connection failed.
+      //
+      // Ask the server for the latest state.
+      // Never automatically retry a +1 request.
+      try {
+        await sendTournamentEvent(
+          "tournament:sync",
+          {},
+          false
+        );
+      } catch {
+        // If still disconnected, Socket.IO's
+        // next reconnection supplies a fresh state.
+      }
+    } finally {
+      // Full state and score broadcasts are authoritative.
+      // The local score is only temporary feedback.
+      setOptimisticScore(null);
+
+      pendingRef.current = false;
+      setBusy(false);
+    }
+  }
+
+  /* ========================================
+     REFEREE LOGIN
+  ======================================== */
+
   async function login(event) {
     event.preventDefault();
+
+    if (pendingRef.current) return;
+
+    pendingRef.current = true;
 
     setBusy(true);
     setError("");
 
     try {
-      const response = await sendTournamentEvent(
-        "coach:login",
-        { password },
-        false
-      );
+      const response =
+        await sendTournamentEvent(
+          "coach:login",
+          { password },
+          false
+        );
 
       saveCoachToken(response.token);
       setToken(response.token);
       setPassword("");
-    } catch (error) {
-      setError(error.message);
+    } catch (err) {
+      setError(
+        err.message || "Unable to log in."
+      );
     } finally {
+      pendingRef.current = false;
       setBusy(false);
     }
   }
+
+  /* ========================================
+     VALIDATE COURT
+  ======================================== */
 
   if (
     !Number.isInteger(courtId) ||
@@ -478,7 +804,10 @@ export default function RefereeCourtClient() {
     courtId > 6
   ) {
     return (
-      <main className="ar-referee" style={{ padding: 30 }}>
+      <main
+        className="ar-referee"
+        style={{ padding: 30 }}
+      >
         Invalid court number.
       </main>
     );
@@ -486,11 +815,18 @@ export default function RefereeCourtClient() {
 
   if (!state) {
     return (
-      <main className="ar-referee" style={{ padding: 30 }}>
+      <main
+        className="ar-referee"
+        style={{ padding: 30 }}
+      >
         Connecting to Court {courtId}...
       </main>
     );
   }
+
+  /* ========================================
+     CURRENT COURT AND MATCH
+  ======================================== */
 
   const court = state.courts.find(
     (item) => item.id === courtId
@@ -500,20 +836,44 @@ export default function RefereeCourtClient() {
     state.stage !== "groups" &&
     state.phase === "live";
 
-  const knockoutFinished =
-    knockout &&
-    (court?.score?.points || []).some(
-      (score) => score >= 10
-    );
-
   const names = (side) =>
     (court?.teams?.[side] || [])
       .filter(Boolean)
-      .map((id) => playerName(state.players, id));
+      .map((id) =>
+        playerName(state.players, id)
+      );
 
-  const score = court?.score?.points || [0, 0];
+  /* ========================================
+     DISPLAYED SCORE
 
-  const winnerSide = score[0] > score[1] ? 0 : 1;
+     Prefer the immediate local value while a
+     point is in flight.
+
+     Otherwise use the authoritative server score.
+  ======================================== */
+
+  const authoritativeScore =
+    court?.score?.points || [0, 0];
+
+  const showOptimisticScore =
+    optimisticScore !== null &&
+    optimisticScore.matchKey === state.matchKey &&
+    optimisticScore.courtId === courtId &&
+    !court?.final;
+
+  const score = showOptimisticScore
+    ? optimisticScore.points
+    : authoritativeScore;
+
+  const knockoutFinished =
+    knockout &&
+    score.some(
+      (value) => value >= 10
+    );
+
+  /* ========================================
+     BUTTON PERMISSIONS
+  ======================================== */
 
   const canScore = Boolean(
     connected &&
@@ -533,11 +893,19 @@ export default function RefereeCourtClient() {
     court?.active &&
     !court.final &&
     !busy &&
-    (knockout
-      ? Math.max(...score) === 10 &&
-        Math.min(...score) < 10
-      : state.timerStarted && score[0] !== score[1])
+    !showOptimisticScore &&
+    (
+      knockout
+        ? Math.max(...score) === 10 &&
+          Math.min(...score) < 10
+        : state.timerStarted &&
+          score[0] !== score[1]
+    )
   );
+
+  /* ========================================
+     FINAL RESULT CONFIRMATION
+  ======================================== */
 
   function requestFinalize() {
     if (!canFinalize) return;
@@ -546,12 +914,24 @@ export default function RefereeCourtClient() {
       type: "finalize",
       title: "Confirm Final Result",
       description:
-        `Final score: ${score[0]} – ${score[1]}. `,
+        `Final score: ${score[0]} – ${score[1]}.`,
       button: "Confirm Result",
     });
   }
 
+  /* ========================================
+     REOPEN CONFIRMATION
+  ======================================== */
+
   function requestReopen() {
+    if (
+      busy ||
+      pendingRef.current ||
+      !court?.final
+    ) {
+      return;
+    }
+
     setDialog({
       type: "reopen",
       title: "Reopen This Match?",
@@ -562,6 +942,10 @@ export default function RefereeCourtClient() {
       button: "Reopen Match",
     });
   }
+
+  /* ========================================
+     ACCEPT DIALOG
+  ======================================== */
 
   async function acceptDialog() {
     if (!dialog) return;
@@ -575,6 +959,7 @@ export default function RefereeCourtClient() {
 
     if (success) {
       setDialog(null);
+
       setNotice(
         event === "score:finalize"
           ? "Final result confirmed."
@@ -583,33 +968,61 @@ export default function RefereeCourtClient() {
     }
   }
 
+  /* ========================================
+     PAGE RENDER
+  ======================================== */
+
   return (
     <main className="ar-referee">
       <style>{styles}</style>
 
       <div className="ar-wrap">
+
+        {/* ==================================
+            HEADER
+        ================================== */}
+
         <header className="ar-header">
           <div className="ar-brand">
-            <img src="/ap-logo.png" alt="AP" />
+            <img
+              src="/ap-logo.png"
+              alt="AP"
+            />
 
             <div>
-              <h1>POWERFUL SUMMER DUBAI</h1>
-              <span>OFFICIAL REFEREE SCORING</span>
+              <h1>
+                POWERFUL SUMMER DUBAI
+              </h1>
+
+              <span>
+                OFFICIAL REFEREE SCORING
+              </span>
             </div>
           </div>
 
           <div className="ar-status">
             <i />
-            {connected ? "LIVE" : "OFFLINE"}
+
+            {connected
+              ? "LIVE"
+              : "OFFLINE"}
           </div>
         </header>
+
+        {/* ==================================
+            COURT HEADING AND CLOCK
+        ================================== */}
 
         <section className="ar-meta">
           <div>
             <h2>
-              COURT {String(courtId).padStart(2, "0")}
+              COURT{" "}
+              {String(courtId).padStart(2, "0")}
             </h2>
-            <p>{stageLabel(state)}</p>
+
+            <p>
+              {stageLabel(state)}
+            </p>
           </div>
 
           {state.stage === "groups" ? (
@@ -618,23 +1031,40 @@ export default function RefereeCourtClient() {
               phase={state.phase}
             />
           ) : (
-            <div className="ar-note" style={{ margin: 0 }}>
+            <div
+              className="ar-note"
+              style={{ margin: 0 }}
+            >
               FIRST TO 10
             </div>
           )}
         </section>
 
+        {/* ==================================
+            ERRORS AND NOTICES
+        ================================== */}
+
         {error && (
-          <div className="ar-note ar-error" role="alert">
+          <div
+            className="ar-note ar-error"
+            role="alert"
+          >
             {error}
           </div>
         )}
 
         {notice && (
-          <div className="ar-note" role="status">
+          <div
+            className="ar-note"
+            role="status"
+          >
             {notice}
           </div>
         )}
+
+        {/* ==================================
+            LOGIN
+        ================================== */}
 
         {!token ? (
           <section className="ar-login">
@@ -642,7 +1072,9 @@ export default function RefereeCourtClient() {
               SECURE SCORING
             </span>
 
-            <h2>Referee Login</h2>
+            <h2>
+              Referee Login
+            </h2>
 
             <form onSubmit={login}>
               <input
@@ -651,77 +1083,120 @@ export default function RefereeCourtClient() {
                 placeholder="Coach password"
                 autoComplete="current-password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) =>
+                  setPassword(e.target.value)
+                }
                 required
               />
 
               <button
+                type="submit"
                 className="ar-btn"
-                disabled={busy || !connected}
+                disabled={
+                  busy ||
+                  !connected
+                }
               >
-                {busy ? "Logging in..." : "LOGIN"}
+                {busy
+                  ? "Logging in..."
+                  : "LOGIN"}
               </button>
             </form>
           </section>
+
         ) : !court?.active ? (
+
+          /* ==================================
+              NO ACTIVE MATCH
+          ================================== */
+
           <div className="ar-note">
             No match scheduled on this court.
           </div>
+
         ) : (
+
+          /* ==================================
+              ACTIVE REFEREE CONTROLS
+          ================================== */
+
           <>
             {state.awaitingStart && (
               <div className="ar-note">
-                Waiting for the coach to start the
-                group-stage timer.
+                Waiting for the coach to
+                start the group-stage timer.
               </div>
             )}
 
-            {state.timeExpired && !court.final && (
-              <div className="ar-note">
-                Time is up. Confirm the final score.
-                If tied, award a deciding point.
-              </div>
-            )}
+            {state.timeExpired &&
+              !court.final && (
+                <div className="ar-note">
+                  Time is up. Confirm the
+                  final score. If tied,
+                  award a deciding point.
+                </div>
+              )}
 
-            {knockoutFinished && !court.final && (
-              <div className="ar-note">
-                A team has reached 10 points.
-                Confirm the winning result.
-              </div>
-            )}
+            {knockoutFinished &&
+              !court.final && (
+                <div className="ar-note">
+                  A team has reached
+                  10 points. Confirm
+                  the winning result.
+                </div>
+              )}
+
+            {/* ==================================
+                TWO TEAMS
+            ================================== */}
 
             <section className="ar-grid">
               {[0, 1].map((side) => (
                 <article
+                  key={side}
                   className={`ar-team ${
                     court.final &&
                     court.score.winner === side
                       ? "winner"
                       : ""
                   }`}
-                  key={side}
                 >
                   <span className="ar-team-label">
                     TEAM {side + 1}
                   </span>
 
+                  {/* Player names */}
+
                   <div className="ar-team-names">
-                    {names(side).map((name, index) => (
-                      <strong key={`${side}-${index}`}>
-                        {name}
-                      </strong>
-                    ))}
+                    {names(side).map(
+                      (name, index) => (
+                        <strong
+                          key={`${side}-${index}`}
+                        >
+                          {name}
+                        </strong>
+                      )
+                    )}
                   </div>
 
-                  <strong className="ar-score">
+                  {/* Immediate local score */}
+
+                  <strong
+                    className="ar-score"
+                    aria-live="polite"
+                    aria-atomic="true"
+                  >
                     {score[side]}
                   </strong>
 
+                  {/* Score button */}
+
                   <button
+                    type="button"
                     className="ar-btn"
                     disabled={!canScore}
                     onClick={() =>
-                      action("score:point", { team: side })
+                      addPoint(side)
                     }
                   >
                     +1 POINT
@@ -730,8 +1205,13 @@ export default function RefereeCourtClient() {
               ))}
             </section>
 
+            {/* ==================================
+                MATCH CONTROLS
+            ================================== */}
+
             <div className="ar-controls">
               <button
+                type="button"
                 className="ar-btn secondary"
                 disabled={
                   !connected ||
@@ -739,24 +1219,35 @@ export default function RefereeCourtClient() {
                   !token ||
                   !court.active ||
                   court.final ||
-                  (state.stage === "groups" &&
-                    !state.timerStarted)
+                  (
+                    state.stage === "groups" &&
+                    !state.timerStarted
+                  )
                 }
-                onClick={() => action("score:undo")}
+                onClick={() =>
+                  action("score:undo")
+                }
               >
                 Undo Last Point
               </button>
 
               {court.final ? (
                 <button
+                  type="button"
                   className="ar-btn secondary"
-                  disabled={busy || !connected}
+                  disabled={
+                    busy ||
+                    !connected
+                  }
                   onClick={requestReopen}
                 >
                   Reopen Result
                 </button>
+
               ) : (
+
                 <button
+                  type="button"
                   className="ar-btn"
                   disabled={!canFinalize}
                   onClick={requestFinalize}
@@ -766,30 +1257,49 @@ export default function RefereeCourtClient() {
               )}
             </div>
 
+            {/* ==================================
+                CONFIRMED RESULT
+            ================================== */}
+
             {court.final && (
               <div className="ar-note">
-                Final result confirmed. Winning team:{" "}
+                Final result confirmed.
+                Winning team:{" "}
+
                 <strong>
-                  {names(court.score.winner).join(" & ")}
+                  {names(
+                    court.score.winner
+                  ).join(" & ")}
                 </strong>
               </div>
             )}
+
+            {/* ==================================
+                GROUP-STAGE TIE NOTICE
+            ================================== */}
 
             {!knockout &&
               !court.final &&
               score[0] === score[1] && (
                 <div className="ar-note">
-                  A tied score cannot be confirmed.
+                  A tied score cannot
+                  be confirmed.
                 </div>
               )}
           </>
         )}
       </div>
 
+      {/* ==================================
+          CONFIRMATION MODAL
+      ================================== */}
+
       <ConfirmationDialog
         dialog={dialog}
         busy={busy}
-        onCancel={() => setDialog(null)}
+        onCancel={() =>
+          setDialog(null)
+        }
         onConfirm={acceptDialog}
       />
     </main>

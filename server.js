@@ -1237,34 +1237,89 @@ function verifyMatchKey(key) {
   }
 }
 
+
 function protectedEvent(
-  socket,
-  io,
-  eventName,
-  handler
-) {
-  socket.on(eventName, (payload = {}, ack) => {
-    try {
-      if (!checkAuth(payload.token)) {
-        return fail(
+    socket,
+    io,
+    eventName,
+    handler
+  ) {
+    socket.on(eventName, (payload = {}, ack) => {
+      const startedAt = performance.now();
+  
+      try {
+        if (!checkAuth(payload.token)) {
+          return fail(
+            ack,
+            "Unauthorized. Please log in again."
+          );
+        }
+  
+        // Existing event handler validates and updates state.
+        handler(payload);
+  
+        const afterHandler = performance.now();
+  
+        // Preserve current persistence guarantees.
+        persist();
+  
+        const afterPersist = performance.now();
+  
+        if (
+          eventName === "score:point" ||
+          eventName === "score:undo"
+        ) {
+          const court = tournament.courts.find(
+            (item) => item.id === Number(payload.courtId)
+          );
+  
+          // Only the affected court's score is transmitted.
+          io.emit("tournament:score", {
+            matchKey: matchKey(),
+            courtId: court.id,
+            points: [...court.score.points],
+            final: court.final,
+          });
+        } else {
+          // All other operations continue to broadcast
+          // the complete tournament state.
+          emitState(io);
+        }
+  
+        const afterBroadcast = performance.now();
+  
+        succeed(ack);
+  
+        // Diagnose slow scoring without filling Railway logs.
+        if (
+          eventName === "score:point" &&
+          afterBroadcast - startedAt > 100
+        ) {
+          console.warn("[SLOW SCORE EVENT]", {
+            courtId: payload.courtId,
+            handlerMs: Number(
+              (afterHandler - startedAt).toFixed(1)
+            ),
+            persistenceMs: Number(
+              (afterPersist - afterHandler).toFixed(1)
+            ),
+            broadcastMs: Number(
+              (afterBroadcast - afterPersist).toFixed(1)
+            ),
+            totalMs: Number(
+              (afterBroadcast - startedAt).toFixed(1)
+            ),
+          });
+        }
+      } catch (error) {
+        fail(
           ack,
-          "Unauthorized. Please log in again."
+          error.message || "Operation failed."
         );
       }
-
-      handler(payload);
-      persist();
-      emitState(io);
-
-      succeed(ack);
-    } catch (error) {
-      fail(
-        ack,
-        error.message || "Operation failed."
-      );
-    }
-  });
-}
+    });
+  }
+  
 
 
 app.prepare().then(() => {

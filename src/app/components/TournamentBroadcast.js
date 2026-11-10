@@ -69,7 +69,7 @@ export function Partners() {
       <span>OFFICIAL PARTNERS</span>
 
       <div className="nt-partner-images">
-        <img src="/premier-padel.jpg" alt="Premier Padel" />
+        <img src="/premier-padel.png" alt="Premier Padel" />
 
         <i aria-hidden="true" />
 
